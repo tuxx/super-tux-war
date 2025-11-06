@@ -40,7 +40,6 @@ The game follows Super Mario War conventions for tight, responsive platformer co
 
 **Combat**
 - Stomp enemies by landing on their head from above
-- Any other collision (side, bottom, jumping into them) results in death
 - Respawn after 2 seconds
 
 ### Level Design (32×32 Tile Grid)
