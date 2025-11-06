@@ -56,8 +56,10 @@ We will first focus on core gameplay foundations: characters, items, levels, and
   - Planned: Jump (4), Fall (4), Death (2)
 - Frame order: left-to-right across the spritesheet.
 - Showcase images:
-  - ![Tux idle](assets/characters/tux/spritesheets/idle.png)
-  - ![Tux run](assets/characters/tux/spritesheets/run.png)
+  - idle frames
+    - ![Tux idle](assets/characters/tux/spritesheets/idle.png)
+  - run frames
+    - ![Tux run](assets/characters/tux/spritesheets/run.png)
 - Godot import settings (per texture in the Import dock):
   - Filter: Off
   - Mipmaps: Off

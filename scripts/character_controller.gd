@@ -18,6 +18,7 @@ extends CharacterBody2D
 @export var air_control_multiplier: float = 0.85	# Slightly reduce horizontal control while airborne
 @export var apex_horizontal_bonus: float = 1.15	# Small horizontal speed bonus at apex
 @export var death_hold_before_respawn: float = 0.2	# Hold last death frame before respawn
+@export var hit_flash_duration: float = 0.2		# Time to tint red on hit
 
 # Respawn properties
 var is_despawned: bool = false
@@ -36,6 +37,8 @@ var jump_buffer_timer: float = 0.0
 var was_on_floor: bool = false
 var anchor_x: float = NAN
 var death_anim_active: bool = false
+var hit_flash_timer: float = 0.0
+var base_sprite_modulate: Color = Color(1, 1, 1, 1)
 
 func _ready():
 	# Store initial spawn position
@@ -43,6 +46,8 @@ func _ready():
 	
 	# Get animated sprite reference
 	animated_sprite = get_node_or_null("AnimatedSprite2D")
+	if animated_sprite:
+		base_sprite_modulate = animated_sprite.modulate
 	shape_alive = get_node_or_null("CollisionShape2D") as CollisionShape2D
 	shape_dead = get_node_or_null("CollisionShape2D_Dead") as CollisionShape2D
 	# Ensure correct initial shape state
@@ -77,6 +82,13 @@ func _physics_process(delta: float) -> void:
 			velocity.x = 0.0
 			velocity.y = clamp(velocity.y + gravity * delta, -max_fall_speed, max_fall_speed)
 			move_and_slide()
+			# Manage hit flash tint
+			if animated_sprite:
+				if hit_flash_timer > 0.0:
+					hit_flash_timer = max(0.0, hit_flash_timer - delta)
+					animated_sprite.modulate = Color(1, 0.25, 0.25, 1)
+				else:
+					animated_sprite.modulate = base_sprite_modulate
 			# Ensure last frame is shown shortly before respawn
 			if animated_sprite and animated_sprite.sprite_frames and animated_sprite.animation == "death":
 				if respawn_timer >= (RESPAWN_TIME - death_hold_before_respawn):
@@ -243,6 +255,8 @@ func despawn() -> void:
 		animated_sprite.play("death")
 		death_anim_active = true
 		# Keep collisions enabled so we can land on the floor
+		# Start hit flash tint
+		hit_flash_timer = hit_flash_duration
 		# Switch to smaller dead collision shape if available (player only)
 		if is_player:
 			if shape_alive:
@@ -264,6 +278,7 @@ func _respawn() -> void:
 	is_despawned = false
 	respawn_timer = 0.0
 	death_anim_active = false
+	hit_flash_timer = 0.0
 	
 	# Reset position
 	global_position = spawn_position
@@ -280,6 +295,8 @@ func _respawn() -> void:
 	
 	# Show the character
 	visible = true
+	if animated_sprite:
+		animated_sprite.modulate = base_sprite_modulate
 	
 	# Enable collision
 	set_collision_layer_value(1, true)
