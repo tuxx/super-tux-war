@@ -20,6 +20,10 @@ extends CharacterBody2D
 @export var death_hold_before_respawn: float = 0.2	# Hold last death frame before respawn
 @export var hit_flash_duration: float = 0.2		# Time to tint red on hit
 
+# Boundary wrap settings
+@export var wrap_enabled: bool = true
+@export var wrap_offset: float = 10.0
+
 # Respawn properties
 var is_despawned: bool = false
 var spawn_position: Vector2
@@ -150,6 +154,9 @@ func _physics_process(delta: float) -> void:
 	if previous_velocity_y > 0:  # Was falling
 		_check_head_stomp()
 
+	# Boundary wrap after all motion for determinism
+	_wrap_after_motion()
+
 func _handle_input() -> void:
 	# Horizontal movement input
 	var input_direction = Input.get_axis("move_left", "move_right")
@@ -235,6 +242,29 @@ func _check_head_stomp() -> void:
 				collider.despawn()
 				# Bounce the stomper back up for game feel
 				velocity.y = jump_velocity * 0.5
+
+func _wrap_after_motion() -> void:
+	if not wrap_enabled:
+		return
+	# Use viewport visible rect as world bounds (matches previous 0..1280x720 default)
+	var rect: Rect2 = get_viewport().get_visible_rect()
+	var left: float = rect.position.x
+	var right: float = rect.position.x + rect.size.x
+	var top: float = rect.position.y
+	var bottom: float = rect.position.y + rect.size.y
+	
+	var pos: Vector2 = global_position
+	# Horizontal wrap
+	if pos.x > right:
+		pos.x = left + wrap_offset
+	elif pos.x < left:
+		pos.x = right - wrap_offset
+	# Vertical wrap
+	if pos.y > bottom:
+		pos.y = top + wrap_offset
+	elif pos.y < top:
+		pos.y = bottom - wrap_offset
+	global_position = pos
 
 func despawn() -> void:
 	if is_despawned:

@@ -13,8 +13,6 @@ size = Vector2(100, 20)
 
 [node name="TestLevel" type="Node2D"]
 
-[node name="BoundaryWrapper" type="Node2D" parent="."]
-script = ExtResource("1_boundary")
 
 [node name="Floor" type="StaticBody2D" parent="."]
 position = Vector2(640, 670)
