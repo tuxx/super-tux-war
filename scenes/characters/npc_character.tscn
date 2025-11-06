@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://c8ut8nmdaudpq" path="res://assets/characters/beasty/spritesheets/idle.png" id="2_vwdjj"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
-size = Vector2(51, 62)
+size = Vector2(92, 116)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_5lcte"]
 atlas = ExtResource("2_vwdjj")
@@ -33,11 +33,12 @@ script = ExtResource("1_character_script")
 character_color = Color(1, 0, 0, 1)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(-2.5, 1)
+position = Vector2(-1.5, 1.5)
+scale = Vector2(0.25, 0.25)
 shape = SubResource("RectangleShape2D_1")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
-scale = Vector2(0.5, 0.5)
+scale = Vector2(0.25, 0.25)
 sprite_frames = SubResource("SpriteFrames_cpq63")
 animation = &"idle"
 autoplay = "idle"

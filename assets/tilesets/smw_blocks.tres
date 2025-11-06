@@ -1,0 +1,78 @@
+[gd_resource type="TileSet" load_steps=13 format=3 uid="uid://bd71pjju517dp"]
+
+[ext_resource type="Texture2D" uid="uid://devgrh3on13b3" path="res://assets/blocks/solid/01.png" id="1_solid_01"]
+[ext_resource type="Texture2D" uid="uid://csbe2ybq2j783" path="res://assets/blocks/solid/02.png" id="2_solid_02"]
+[ext_resource type="Texture2D" uid="uid://b2iafor57fyj0" path="res://assets/blocks/semisolid/01.png" id="3_semisolid_01"]
+[ext_resource type="Texture2D" uid="uid://brgqmxpmkip3v" path="res://assets/blocks/ice/01.png" id="4_ice_01"]
+[ext_resource type="Texture2D" uid="uid://yyansvc3cjo8" path="res://assets/blocks/death/ceiling/01.png" id="5_death_ceiling_01"]
+[ext_resource type="Texture2D" uid="uid://dj54ombsetn25" path="res://assets/blocks/death/floor/01.png" id="6_death_floor_01"]
+
+[sub_resource type="TileSetAtlasSource" id="1_src_solid_01"]
+resource_name = "SOLID_CONCRETE"
+texture = ExtResource("1_solid_01")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-16, -16, 16, -16, 16, 16, -16, 16)
+0:0/0/custom_data_0 = true
+
+[sub_resource type="TileSetAtlasSource" id="2_src_solid_02"]
+texture = ExtResource("2_solid_02")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-16, -16, 16, -16, 16, 16, -16, 16)
+0:0/0/custom_data_0 = true
+
+[sub_resource type="TileSetAtlasSource" id="3_src_semisolid_01"]
+texture = ExtResource("3_semisolid_01")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+0:0/0/physics_layer_1/polygon_0/points = PackedVector2Array(-16, -16, 16, -16, 16, -12, -16, -12)
+0:0/0/physics_layer_1/polygon_0/one_way = true
+0:0/0/custom_data_1 = true
+
+[sub_resource type="TileSetAtlasSource" id="4_src_ice_01"]
+texture = ExtResource("4_ice_01")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-16, -16, 16, -16, 16, 16, -16, 16)
+0:0/0/custom_data_0 = true
+0:0/0/custom_data_4 = true
+
+[sub_resource type="TileSetAtlasSource" id="5_src_death_ceiling_01"]
+texture = ExtResource("5_death_ceiling_01")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-16, -16, 16, -16, 16, 16, -16, 16)
+0:0/0/custom_data_0 = true
+0:0/0/custom_data_3 = true
+
+[sub_resource type="TileSetAtlasSource" id="6_src_death_floor_01"]
+texture = ExtResource("6_death_floor_01")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-16, -16, 16, -16, 16, 16, -16, 16)
+0:0/0/custom_data_0 = true
+0:0/0/custom_data_2 = true
+
+[resource]
+tile_size = Vector2i(32, 32)
+physics_layer_0/collision_layer = 1
+physics_layer_0/collision_mask = 0
+physics_layer_1/collision_layer = 1
+physics_layer_1/collision_mask = 0
+custom_data_layer_0/name = "solid"
+custom_data_layer_0/type = 1
+custom_data_layer_1/name = "semisolid"
+custom_data_layer_1/type = 1
+custom_data_layer_2/name = "death_top"
+custom_data_layer_2/type = 1
+custom_data_layer_3/name = "death_bottom"
+custom_data_layer_3/type = 1
+custom_data_layer_4/name = "ice"
+custom_data_layer_4/type = 1
+sources/0 = SubResource("1_src_solid_01")
+sources/1 = SubResource("2_src_solid_02")
+sources/2 = SubResource("3_src_semisolid_01")
+sources/3 = SubResource("4_src_ice_01")
+sources/4 = SubResource("5_src_death_ceiling_01")
+sources/5 = SubResource("6_src_death_floor_01")

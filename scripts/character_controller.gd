@@ -1,22 +1,15 @@
 extends CharacterBody2D
 
 # Movement and physics properties
-@export var move_speed: float = 300.0
-@export var jump_velocity: float = -400.0
-@export var gravity: float = 980.0
+@export var move_speed: float = GameConstants.PLAYER_MAX_WALK_SPEED
+@export var jump_velocity: float = GameConstants.JUMP_VELOCITY
+@export var gravity: float = GameConstants.GRAVITY
 @export var is_player: bool = false
 @export var character_color: Color = Color.WHITE
-@export var max_fall_speed: float = 1000.0
+@export var max_fall_speed: float = GameConstants.MAX_FALL_SPEED
 
-# Jump feel tuning
-@export var fall_multiplier: float = 2.0			# Faster falls feel snappier
-@export var low_jump_multiplier: float = 3.0		# Cutting jump early increases gravity
-@export var coyote_time: float = 0.1				# Grace time after leaving ground to still jump
-@export var jump_buffer_time: float = 0.1			# Buffer jump input slightly before landing
-@export var apex_gravity_scale: float = 0.6		# Reduce gravity near apex to add slight "hang"
-@export var apex_threshold_speed: float = 40.0	# |vy| below this is considered near apex
-@export var air_control_multiplier: float = 0.85	# Slightly reduce horizontal control while airborne
-@export var apex_horizontal_bonus: float = 1.15	# Small horizontal speed bonus at apex
+# Note: Movement feel multipliers removed to match SMW baseline
+# (no apex hang/bonus, no air-control dampening, no per-node speed multipliers)
 @export var death_hold_before_respawn: float = 0.2	# Hold last death frame before respawn
 @export var hit_flash_duration: float = 0.2		# Time to tint red on hit
 
@@ -35,14 +28,15 @@ var animated_sprite: AnimatedSprite2D
 var shape_alive: CollisionShape2D
 var shape_dead: CollisionShape2D
 
-# Timers/state for jump assist
-var time_since_left_floor: float = 0.0
-var jump_buffer_timer: float = 0.0
-var was_on_floor: bool = false
+# Timers/state for jump assist and drop-through
 var anchor_x: float = NAN
 var death_anim_active: bool = false
 var hit_flash_timer: float = 0.0
 var base_sprite_modulate: Color = Color(1, 1, 1, 1)
+var coyote_timer: float = 0.0
+var jump_buffer_timer: float = 0.0
+var drop_through_timer: float = 0.0
+const DROP_THROUGH_DURATION: float = 0.2
 
 func _ready():
 	# Store initial spawn position
@@ -105,6 +99,19 @@ func _physics_process(delta: float) -> void:
 			_respawn()
 		return
 	
+	# Update timers
+	var was_on_floor = is_on_floor()
+	if was_on_floor:
+		coyote_timer = GameConstants.COYOTE_TIME
+	else:
+		coyote_timer = max(0.0, coyote_timer - delta)
+	
+	if jump_buffer_timer > 0.0:
+		jump_buffer_timer = max(0.0, jump_buffer_timer - delta)
+	
+	if drop_through_timer > 0.0:
+		drop_through_timer = max(0.0, drop_through_timer - delta)
+	
 	# Handle input for player characters
 	if is_player:
 		_handle_input()
@@ -112,47 +119,41 @@ func _physics_process(delta: float) -> void:
 		# Ensure NPCs do not retain any horizontal drift
 		velocity.x = 0.0
 
-	# Update grounded state timers for coyote time
-	if is_on_floor():
-		time_since_left_floor = 0.0
-	else:
-		time_since_left_floor += delta
-
-	# Decrease jump buffer timer
-	if jump_buffer_timer > 0.0:
-		jump_buffer_timer = max(0.0, jump_buffer_timer - delta)
-	
 	# Apply gravity
 	_apply_gravity(delta)
 	
-	# Handle buffered/coyote jump resolution after gravity application
-	if _should_jump():
-		_perform_jump()
-
 	# Cap velocity to prevent infinite acceleration
 	velocity.y = clamp(velocity.y, -max_fall_speed, max_fall_speed)
-	velocity.x = clamp(velocity.x, -move_speed * 2, move_speed * 2)
+	velocity.x = clamp(velocity.x, -GameConstants.PLAYER_MAX_RUN_SPEED, GameConstants.PLAYER_MAX_RUN_SPEED)
 	
 	# Move and handle collisions
 	var previous_velocity_y = velocity.y
+	
+	# Temporarily disable platform_on_leave for drop-through
+	var old_platform_on_leave = platform_on_leave
+	if drop_through_timer > 0.0:
+		platform_on_leave = CharacterBody2D.PLATFORM_ON_LEAVE_DO_NOTHING
+	
 	move_and_slide()
+	
+	# Restore platform behavior
+	if drop_through_timer > 0.0:
+		platform_on_leave = old_platform_on_leave
 
 	# Hard-lock NPC X so collision resolution and respawns cannot push it sideways
 	if not is_player and anchor_x == anchor_x: # check for NaN
 		global_position.x = anchor_x
 
-	# Detect landing to consume buffered jump if still pending
+	# Handle buffered jump after landing
 	if is_on_floor() and not was_on_floor and jump_buffer_timer > 0.0:
 		_perform_jump()
+		jump_buffer_timer = 0.0
 
-	was_on_floor = is_on_floor()
-	
 	# Update animations
 	_update_animation()
 	
-	# Check for head stomps
-	if previous_velocity_y > 0:  # Was falling
-		_check_head_stomp()
+	# Check for character collisions (stomps and deaths)
+	_check_character_collisions(previous_velocity_y)
 
 	# Boundary wrap after all motion for determinism
 	_wrap_after_motion()
@@ -160,51 +161,37 @@ func _physics_process(delta: float) -> void:
 func _handle_input() -> void:
 	# Horizontal movement input
 	var input_direction = Input.get_axis("move_left", "move_right")
-	var horizontal_speed: float = move_speed
-	if not is_on_floor():
-		# Slight midair control dampening
-		horizontal_speed *= air_control_multiplier
-		# Small apex bonus to help clear gaps
-		if _is_near_apex():
-			horizontal_speed *= apex_horizontal_bonus
-	velocity.x = input_direction * horizontal_speed
+	velocity.x = input_direction * move_speed
 	
-	# Jump input buffering
-	if Input.is_action_just_pressed("jump"):
-		jump_buffer_timer = jump_buffer_time
-
-func _apply_gravity(delta: float) -> void:
-	# Apply gravity with fall/low-jump multipliers for better feel
-	if is_on_floor():
+	# Drop-through semisolid platforms (Down + Jump)
+	if Input.is_action_pressed("move_down") and Input.is_action_just_pressed("jump") and is_on_floor():
+		# Initiate drop-through by temporarily disabling one-way collision detection
+		drop_through_timer = DROP_THROUGH_DURATION
+		position.y += 1  # Small nudge down to clear the platform
 		return
 	
-	var g: float = gravity
-	if velocity.y > 0.0:
-		# Falling: make it faster/snappier
-		g *= fall_multiplier
-	elif velocity.y < 0.0 and not Input.is_action_pressed("jump"):
-		# Rising but jump released early: cut the jump by increasing gravity
-		g *= low_jump_multiplier
+	# Jump with coyote time and buffering
+	if Input.is_action_just_pressed("jump") and not Input.is_action_pressed("move_down"):
+		if coyote_timer > 0.0:
+			_perform_jump()
+			coyote_timer = 0.0
+		else:
+			# Buffer the jump
+			jump_buffer_timer = GameConstants.JUMP_BUFFER_TIME
 	
-	# Add a slight hang near the jump apex to feel more controllable
-	if _is_near_apex():
-		g *= apex_gravity_scale
-	
-	velocity.y += g * delta
+	# Variable jump: early release clamp
+	if Input.is_action_just_released("jump") and velocity.y < 0:
+		if velocity.y < GameConstants.JUMP_EARLY_CLAMP:
+			velocity.y = GameConstants.JUMP_EARLY_CLAMP
 
-func _is_near_apex() -> bool:
-	return (not is_on_floor()) and abs(velocity.y) <= apex_threshold_speed
+func _apply_gravity(delta: float) -> void:
+	# Apply gravity (SMW baseline; no apex/fall multipliers)
+	if not is_on_floor():
+		velocity.y += gravity * delta
 
-func _should_jump() -> bool:
-	# Can jump if on floor or within coyote time window, and we have a buffered press
-	var can_coyote_jump: bool = (is_on_floor() or time_since_left_floor <= coyote_time)
-	return can_coyote_jump and jump_buffer_timer > 0.0
 
 func _perform_jump() -> void:
 	velocity.y = jump_velocity
-	jump_buffer_timer = 0.0
-	# Reset coyote after consuming jump
-	time_since_left_floor = coyote_time + 1.0
 
 func _update_animation() -> void:
 	if not animated_sprite:
@@ -224,24 +211,36 @@ func _update_animation() -> void:
 		if animated_sprite.animation != "idle":
 			animated_sprite.play("idle")
 
-func _check_head_stomp() -> void:
-	# Check if we landed on another character
+func _check_character_collisions(previous_velocity_y: float) -> void:
+	# Check all character collisions for stomps and deaths
 	for i in range(get_slide_collision_count()):
 		var collision = get_slide_collision(i)
 		var collider = collision.get_collider()
 		
-		# Only stomp characters when contacting their top surface (avoid side/bottom kills)
+		# Only process character-to-character collisions
 		if collider is CharacterBody2D and collider != self and collider.has_method("despawn"):
 			# Ignore already-despawned targets
 			if collider.has_method("get") and collider.get("is_despawned") == true:
 				continue
+			
 			var normal: Vector2 = collision.get_normal()
-			# Upward normal means we hit their top. Threshold tolerates slopes/rounded shapes.
-			var hit_top: bool = normal.y < -0.6
-			if hit_top:
+			
+			# Check if we stomped them (we were falling and hit their top)
+			# Upward normal means we hit their top from above
+			var hit_their_top: bool = normal.y < -0.6 and previous_velocity_y > 0
+			
+			# Check if we hit their bottom (we were jumping up and hit their bottom)
+			# Downward normal means we hit their bottom from below
+			var hit_their_bottom: bool = normal.y > 0.6 and previous_velocity_y < 0
+			
+			if hit_their_top:
+				# Successful stomp - they die, we bounce
 				collider.despawn()
-				# Bounce the stomper back up for game feel
 				velocity.y = jump_velocity * 0.5
+			elif hit_their_bottom:
+				# Hit their bottom from below - we die
+				despawn()
+			# Side collisions (normal.x dominant) are harmless - do nothing
 
 func _wrap_after_motion() -> void:
 	if not wrap_enabled:
@@ -313,9 +312,6 @@ func _respawn() -> void:
 	# Reset position
 	global_position = spawn_position
 	velocity = Vector2.ZERO
-	was_on_floor = true
-	jump_buffer_timer = 0.0
-	time_since_left_floor = 0.0
 	_face_towards_screen_center()
 	# Restore alive collision shape
 	if shape_alive:
