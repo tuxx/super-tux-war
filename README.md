@@ -8,7 +8,7 @@ Super Mario Wars clone in godot 4
 *The current development status screenshot*
 
 - *Tux*: Player character
-- *Red Square*: NPC
+- *FreeBSD Beastie*: NPC
 - *Level*: Ugly test level
 
 ---
@@ -23,13 +23,19 @@ Super Mario Wars clone in godot 4
 **Sprites**
 
 - Tux
-    - Jumping
-    - Falling
+    - [ ] Jumping
+    - [ ] Falling
 - BSD Beasty
-    - Idle
-    - Run
-    - Jump
-    - Fall
+    - [x] Idle
+    - [ ]  Run
+    - [ ]  Jump
+    - [ ]  Fall
+- OpenBSD Fish
+    - [x]  16x16 base sprite
+    - [ ]  Idle
+    - [ ]  Run
+    - [ ]  Jump
+    - [ ]  Fall
 - Other characters.
 
 
