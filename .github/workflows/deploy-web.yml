@@ -1,0 +1,61 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    tags:
+      - '*'
+
+env:
+  GODOT_VERSION: 4.5.1
+  EXPORT_NAME: super-tux-war
+  PROJECT_PATH: .
+
+jobs:
+  export-web:
+    name: Web Export
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Setup Godot
+        run: |
+          wget -q https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip
+          unzip -q Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip
+          chmod +x Godot_v${GODOT_VERSION}-stable_linux.x86_64
+          mkdir -p ~/.local/share/godot/export_templates
+          wget -q https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz
+          unzip -q Godot_v${GODOT_VERSION}-stable_export_templates.tpz
+          mv templates/* ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable/
+
+      - name: Import Assets
+        run: |
+          ./Godot_v${GODOT_VERSION}-stable_linux.x86_64 --headless --verbose --editor --quit
+
+      - name: Build Web
+        run: |
+          mkdir -p build/web
+          ./Godot_v${GODOT_VERSION}-stable_linux.x86_64 --headless --verbose --export-release "Web" build/web/index.html
+
+      - name: Add coi-serviceworker (for SharedArrayBuffer)
+        run: |
+          cd build/web
+          wget -q https://raw.githubusercontent.com/gzuidhof/coi-serviceworker/master/coi-serviceworker.min.js
+          # Add the service worker script to enable SharedArrayBuffer
+          sed -i 's/<head>/<head>\n    <script src="coi-serviceworker.min.js"><\/script>/' index.html
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

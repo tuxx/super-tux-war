@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Tux War</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #1a1a1a;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        #game-container {
+            width: 100%;
+            max-width: 1280px;
+            aspect-ratio: 16/9;
+            background: #000;
+            position: relative;
+        }
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        .info {
+            text-align: center;
+            padding: 20px;
+            max-width: 800px;
+        }
+        .info h1 {
+            margin: 0 0 10px 0;
+        }
+        .info p {
+            margin: 5px 0;
+            opacity: 0.8;
+        }
+        .controls {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .controls h3 {
+            margin: 0 0 10px 0;
+        }
+        .controls ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .controls li {
+            padding: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="info">
+        <h1>Super Tux War</h1>
+        <p>A fan-inspired arena platformer built with Godot 4</p>
+    </div>
+    
+    <div id="game-container">
+        <!-- Godot canvas will be inserted here -->
+    </div>
+    
+    <div class="info">
+        <div class="controls">
+            <h3>Controls</h3>
+            <ul>
+                <li><strong>Move:</strong> A/D or Arrow Keys</li>
+                <li><strong>Jump:</strong> Space or W</li>
+                <li><strong>Drop through platforms:</strong> S + Space</li>
+            </ul>
+        </div>
+        <p style="margin-top: 20px;">
+            <a href="https://github.com/tuxx/super-tux-war" style="color: #58a6ff;">View on GitHub</a>
+        </p>
+    </div>
+</body>
+</html>

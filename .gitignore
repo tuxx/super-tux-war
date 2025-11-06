@@ -17,3 +17,6 @@ mono_crash.*.json
 
 # Keep local crap in the localcrap folder.
 localcrap/
+
+# Build outputs
+build/
