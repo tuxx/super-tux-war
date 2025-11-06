@@ -4,7 +4,7 @@ extends Node2D
 @export var wrap_offset: float = 10.0
 
 # Called every frame to check for boundary wrapping
-func _process(_delta: float) -> void:
+func _physics_process(_delta: float) -> void:
 	# Determine bounds from the current viewport each frame
 	var visible_rect: Rect2 = get_viewport().get_visible_rect()
 	# Check all CharacterBody2D children in the parent node
