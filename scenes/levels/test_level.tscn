@@ -1,8 +1,8 @@
 [gd_scene load_steps=6 format=3 uid="uid://gtqo8ylakt4s"]
 
 [ext_resource type="Script" uid="uid://x5eq3isnjapn" path="res://scripts/boundary_wrapper.gd" id="1_boundary"]
-[ext_resource type="PackedScene" path="res://scenes/characters/player_character.tscn" id="2_player"]
-[ext_resource type="PackedScene" path="res://scenes/characters/npc_character.tscn" id="3_npc"]
+[ext_resource type="PackedScene" uid="uid://c4dwbqdkxmm42" path="res://scenes/characters/player_character.tscn" id="2_player"]
+[ext_resource type="PackedScene" uid="uid://o0yj30qpa4ym" path="res://scenes/characters/npc_character.tscn" id="3_npc"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_floor"]
 size = Vector2(1163, 100)
@@ -30,7 +30,7 @@ offset_bottom = 50.0
 color = Color(0.4, 0.4, 0.4, 1)
 
 [node name="JumpingPlatform1" type="StaticBody2D" parent="."]
-position = Vector2(300, 550)
+position = Vector2(361, 547)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="JumpingPlatform1"]
 shape = SubResource("RectangleShape2D_platform")
@@ -43,7 +43,7 @@ offset_bottom = 10.0
 color = Color(0.6, 0.8, 0.4, 1)
 
 [node name="JumpingPlatform2" type="StaticBody2D" parent="."]
-position = Vector2(476, 475)
+position = Vector2(541, 479)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="JumpingPlatform2"]
 shape = SubResource("RectangleShape2D_platform")
@@ -164,20 +164,6 @@ position = Vector2(1098, 61)
 shape = SubResource("RectangleShape2D_platform")
 
 [node name="ColorRect" type="ColorRect" parent="JumpingPlatform10"]
-offset_left = -50.0
-offset_top = -10.0
-offset_right = 50.0
-offset_bottom = 10.0
-color = Color(0.6, 0.8, 0.4, 1)
-metadata/_edit_use_anchors_ = true
-
-[node name="JumpingPlatform11" type="StaticBody2D" parent="."]
-position = Vector2(1196, 42)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="JumpingPlatform11"]
-shape = SubResource("RectangleShape2D_platform")
-
-[node name="ColorRect" type="ColorRect" parent="JumpingPlatform11"]
 offset_left = -50.0
 offset_top = -10.0
 offset_right = 50.0

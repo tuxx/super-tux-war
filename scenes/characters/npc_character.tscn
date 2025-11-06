@@ -40,4 +40,5 @@ shape = SubResource("RectangleShape2D_1")
 scale = Vector2(0.5, 0.5)
 sprite_frames = SubResource("SpriteFrames_cpq63")
 animation = &"idle"
+autoplay = "idle"
 frame_progress = 0.7823256

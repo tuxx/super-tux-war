@@ -27,6 +27,7 @@ var animated_sprite: AnimatedSprite2D
 var time_since_left_floor: float = 0.0
 var jump_buffer_timer: float = 0.0
 var was_on_floor: bool = false
+var anchor_x: float = NAN
 
 func _ready():
 	# Store initial spawn position
@@ -40,6 +41,13 @@ func _ready():
 	if color_rect:
 		color_rect.color = character_color
 
+	# Set initial facing toward screen center
+	_face_towards_screen_center()
+
+	# For NPCs, lock horizontal position to prevent drift from collisions
+	if not is_player:
+		anchor_x = global_position.x
+
 func _physics_process(delta: float) -> void:
 	# Handle respawn timer
 	if is_despawned:
@@ -51,6 +59,9 @@ func _physics_process(delta: float) -> void:
 	# Handle input for player characters
 	if is_player:
 		_handle_input()
+	else:
+		# Ensure NPCs do not retain any horizontal drift
+		velocity.x = 0.0
 
 	# Update grounded state timers for coyote time
 	if is_on_floor():
@@ -76,6 +87,10 @@ func _physics_process(delta: float) -> void:
 	# Move and handle collisions
 	var previous_velocity_y = velocity.y
 	move_and_slide()
+
+	# Hard-lock NPC X so collision resolution and respawns cannot push it sideways
+	if not is_player and anchor_x == anchor_x: # check for NaN
+		global_position.x = anchor_x
 
 	# Detect landing to consume buffered jump if still pending
 	if is_on_floor() and not was_on_floor and jump_buffer_timer > 0.0:
@@ -181,6 +196,7 @@ func _respawn() -> void:
 	was_on_floor = true
 	jump_buffer_timer = 0.0
 	time_since_left_floor = 0.0
+	_face_towards_screen_center()
 	
 	# Show the character
 	visible = true
@@ -188,3 +204,13 @@ func _respawn() -> void:
 	# Enable collision
 	set_collision_layer_value(1, true)
 	set_collision_mask_value(1, true)
+
+func _face_towards_screen_center() -> void:
+	if not animated_sprite:
+		return
+	var center_x := get_viewport().get_visible_rect().size.x * 0.5
+	# If positioned left of center, face right (no flip). If right of center, face left (flip).
+	if global_position.x < center_x:
+		animated_sprite.flip_h = false
+	else:
+		animated_sprite.flip_h = true
