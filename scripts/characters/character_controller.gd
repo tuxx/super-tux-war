@@ -81,6 +81,92 @@ func _ready():
 	# Set initial facing toward screen center
 	_face_towards_screen_center()
 
+# Dynamically load sprite frames for a given character
+func load_character_animations(character_name: String) -> void:
+	if not animated_sprite:
+		return
+	
+	character_asset_name = character_name
+	
+	# Build paths to character spritesheets (try both plural and singular)
+	var base_path := "res://assets/characters/%s/spritesheets/" % character_name
+	var base_path_alt := "res://assets/characters/%s/spritesheet/" % character_name
+	
+	# Check which path exists
+	if not ResourceLoader.exists(base_path + "idle.png") and ResourceLoader.exists(base_path_alt + "idle.png"):
+		base_path = base_path_alt
+	
+	var idle_path := base_path + "idle.png"
+	var jump_path := base_path + "jump.png"
+	var run_path := base_path + "run.png"
+	
+	# Try to load textures
+	var idle_texture := _load_texture_safe(idle_path)
+	var jump_texture := _load_texture_safe(jump_path)
+	var run_texture := _load_texture_safe(run_path)
+	
+	# If no textures could be loaded, keep existing animations
+	if not idle_texture and not jump_texture and not run_texture:
+		push_warning("Could not load animations for character: %s" % character_name)
+		return
+	
+	# Create new SpriteFrames
+	var new_frames := SpriteFrames.new()
+	
+	# Add idle animation (2 frames, 32x32 each)
+	if idle_texture:
+		new_frames.add_animation("idle")
+		new_frames.set_animation_speed("idle", 4.0)
+		new_frames.set_animation_loop("idle", true)
+		var idle_frame_1 := AtlasTexture.new()
+		idle_frame_1.atlas = idle_texture
+		idle_frame_1.region = Rect2(0, 0, 32, 32)
+		new_frames.add_frame("idle", idle_frame_1, 1.0, 0)
+		var idle_frame_2 := AtlasTexture.new()
+		idle_frame_2.atlas = idle_texture
+		idle_frame_2.region = Rect2(32, 0, 32, 32)
+		new_frames.add_frame("idle", idle_frame_2, 1.0, 1)
+	
+	# Add jump animation (2 frames, 32x32 each)
+	if jump_texture:
+		new_frames.add_animation("jump")
+		new_frames.set_animation_speed("jump", 5.0)
+		new_frames.set_animation_loop("jump", true)
+		var jump_frame_1 := AtlasTexture.new()
+		jump_frame_1.atlas = jump_texture
+		jump_frame_1.region = Rect2(0, 0, 32, 32)
+		new_frames.add_frame("jump", jump_frame_1, 1.0, 0)
+		var jump_frame_2 := AtlasTexture.new()
+		jump_frame_2.atlas = jump_texture
+		jump_frame_2.region = Rect2(32, 0, 32, 32)
+		new_frames.add_frame("jump", jump_frame_2, 1.0, 1)
+	
+	# Add run animation (4 frames, 32x32 each)
+	if run_texture:
+		new_frames.add_animation("run")
+		new_frames.set_animation_speed("run", 8.0)
+		new_frames.set_animation_loop("run", true)
+		for i in range(4):
+			var run_frame := AtlasTexture.new()
+			run_frame.atlas = run_texture
+			run_frame.region = Rect2(i * 32, 0, 32, 32)
+			new_frames.add_frame("run", run_frame, 1.0, i)
+	
+	# Apply the new sprite frames
+	animated_sprite.sprite_frames = new_frames
+	
+	# Start with idle animation
+	if new_frames.has_animation("idle"):
+		animated_sprite.play("idle")
+
+func _load_texture_safe(path: String) -> Texture2D:
+	if not ResourceLoader.exists(path):
+		return null
+	var texture := load(path)
+	if texture is Texture2D:
+		return texture
+	return null
+
 func _physics_process(delta: float) -> void:
 	# Handle respawn timer
 	if is_despawned:

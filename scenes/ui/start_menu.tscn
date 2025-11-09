@@ -1,8 +1,8 @@
 [gd_scene load_steps=4 format=3 uid="uid://b8n5x40uc2bsb"]
 
 [ext_resource type="Script" uid="uid://da5q4e6jjjhuq" path="res://scripts/ui/start_menu.gd" id="1_start_menu_script"]
-[ext_resource type="Theme" path="res://assets/ui/menu_theme.tres" id="2_menu_theme"]
-[ext_resource type="Theme" path="res://assets/ui/level_card_theme.tres" id="3_level_card_theme"]
+[ext_resource type="Theme" uid="uid://cc60i0866epm4" path="res://assets/ui/menu_theme.tres" id="2_menu_theme"]
+[ext_resource type="Theme" uid="uid://brwa2gicd2egu" path="res://assets/ui/level_card_theme.tres" id="3_level_card_theme"]
 
 [node name="StartMenu" type="Control"]
 layout_mode = 3
@@ -11,8 +11,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_start_menu_script")
 theme = ExtResource("2_menu_theme")
+script = ExtResource("1_start_menu_script")
 
 [node name="Background" type="ColorRect" parent="."]
 layout_mode = 1
@@ -47,121 +47,162 @@ horizontal_alignment = 1
 [node name="Separator1" type="HSeparator" parent="PanelContainer/VBox"]
 layout_mode = 2
 
-[node name="Buttons" type="VBoxContainer" parent="PanelContainer/VBox"]
+[node name="ContentHBox" type="HBoxContainer" parent="PanelContainer/VBox"]
 layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 40
+
+[node name="LeftPanel" type="VBoxContainer" parent="PanelContainer/VBox/ContentHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="LevelNavigationHBox" type="HBoxContainer" parent="PanelContainer/VBox/ContentHBox/LeftPanel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="PrevLevelButton" type="Button" parent="PanelContainer/VBox/ContentHBox/LeftPanel/LevelNavigationHBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 24
+text = "<"
+
+[node name="LevelContentVBox" type="VBoxContainer" parent="PanelContainer/VBox/ContentHBox/LeftPanel/LevelNavigationHBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="SelectedLevelLabel" type="Label" parent="PanelContainer/VBox/ContentHBox/LeftPanel/LevelNavigationHBox/LevelContentVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Tux's Castle"
+horizontal_alignment = 1
+
+[node name="LevelPreview" type="PanelContainer" parent="PanelContainer/VBox/ContentHBox/LeftPanel/LevelNavigationHBox/LevelContentVBox"]
+custom_minimum_size = Vector2(250, 180)
+layout_mode = 2
+theme = ExtResource("3_level_card_theme")
+
+[node name="LevelThumb" type="TextureRect" parent="PanelContainer/VBox/ContentHBox/LeftPanel/LevelNavigationHBox/LevelContentVBox/LevelPreview"]
+unique_name_in_owner = true
+layout_mode = 2
+stretch_mode = 5
+
+[node name="NextLevelButton" type="Button" parent="PanelContainer/VBox/ContentHBox/LeftPanel/LevelNavigationHBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 24
+text = ">"
+
+[node name="Buttons" type="VBoxContainer" parent="PanelContainer/VBox/ContentHBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
 theme_override_constants/separation = 12
 
-[node name="NewGameButton" type="Button" parent="PanelContainer/VBox/Buttons"]
+[node name="NewGameButton" type="Button" parent="PanelContainer/VBox/ContentHBox/Buttons"]
 custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
 size_flags_horizontal = 4
+size_flags_vertical = 4
 theme_override_font_sizes/font_size = 26
-text = "New Game"
+text = "Start New Game"
 
-[node name="SeparatorLevel" type="HSeparator" parent="PanelContainer/VBox"]
+[node name="RightPanel" type="VBoxContainer" parent="PanelContainer/VBox/ContentHBox"]
 layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 10
+alignment = 1
 
-[node name="LevelHeader" type="Label" parent="PanelContainer/VBox"]
+[node name="CharactersHBox" type="HBoxContainer" parent="PanelContainer/VBox/ContentHBox/RightPanel"]
 layout_mode = 2
-text = "Select a Level"
+size_flags_horizontal = 4
+theme_override_constants/separation = 30
+alignment = 1
+
+[node name="PlayerSection" type="VBoxContainer" parent="PanelContainer/VBox/ContentHBox/RightPanel/CharactersHBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PlayerLabel" type="Label" parent="PanelContainer/VBox/ContentHBox/RightPanel/CharactersHBox/PlayerSection"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Player"
 horizontal_alignment = 1
-size_flags_horizontal = 4
-modulate = Color(1, 1, 1, 0.85)
 
-[node name="LevelScroll" type="ScrollContainer" parent="PanelContainer/VBox"]
-custom_minimum_size = Vector2(0, 220)
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-horizontal_scroll_mode = 0
-
-[node name="CenterContainer" type="CenterContainer" parent="PanelContainer/VBox/LevelScroll"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="LevelGrid" type="GridContainer" parent="PanelContainer/VBox/LevelScroll/CenterContainer"]
-layout_mode = 2
-columns = 2
-theme_override_constants/h_separation = 12
-theme_override_constants/v_separation = 12
-
-[node name="LevelCard1" type="PanelContainer" parent="PanelContainer/VBox/LevelScroll/CenterContainer/LevelGrid"]
+[node name="PlayerClickArea" type="PanelContainer" parent="PanelContainer/VBox/ContentHBox/RightPanel/CharactersHBox/PlayerSection"]
+custom_minimum_size = Vector2(120, 120)
 layout_mode = 2
 size_flags_horizontal = 4
-custom_minimum_size = Vector2(200, 160)
-theme = ExtResource("3_level_card_theme")
 
-[node name="Border" type="ReferenceRect" parent="PanelContainer/VBox/LevelScroll/CenterContainer/LevelGrid/LevelCard1"]
-visible = false
-layout_mode = 2
-border_color = Color(1, 1, 0, 1)
-border_width = 3.0
-z_index = 10
-
-[node name="VBox" type="VBoxContainer" parent="PanelContainer/VBox/LevelScroll/CenterContainer/LevelGrid/LevelCard1"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-
-[node name="Button" type="Button" parent="PanelContainer/VBox/LevelScroll/CenterContainer/LevelGrid/LevelCard1"]
+[node name="PlayerButton" type="Button" parent="PanelContainer/VBox/ContentHBox/RightPanel/CharactersHBox/PlayerSection/PlayerClickArea"]
+unique_name_in_owner = true
 layout_mode = 2
 flat = true
-mouse_filter = 0
-focus_mode = 2
-theme = ExtResource("3_level_card_theme")
 
-[node name="Thumb" type="TextureRect" parent="PanelContainer/VBox/LevelScroll/CenterContainer/LevelGrid/LevelCard1/VBox"]
+[node name="VBox" type="VBoxContainer" parent="PanelContainer/VBox/ContentHBox/RightPanel/CharactersHBox/PlayerSection/PlayerClickArea"]
 layout_mode = 2
-custom_minimum_size = Vector2(180, 120)
-size_flags_horizontal = 4
-stretch_mode = 5
 mouse_filter = 2
+alignment = 1
 
-[node name="Name" type="Label" parent="PanelContainer/VBox/LevelScroll/CenterContainer/LevelGrid/LevelCard1/VBox"]
+[node name="PlayerPreview" type="TextureRect" parent="PanelContainer/VBox/ContentHBox/RightPanel/CharactersHBox/PlayerSection/PlayerClickArea/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(96, 96)
 layout_mode = 2
 size_flags_horizontal = 4
+mouse_filter = 2
+expand_mode = 2
+stretch_mode = 4
+
+[node name="CPUSection" type="VBoxContainer" parent="PanelContainer/VBox/ContentHBox/RightPanel/CharactersHBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="CPULabel" type="Label" parent="PanelContainer/VBox/ContentHBox/RightPanel/CharactersHBox/CPUSection"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "CPU"
 horizontal_alignment = 1
-text = "Level 01"
-mouse_filter = 2
 
-[node name="LevelCard2" type="PanelContainer" parent="PanelContainer/VBox/LevelScroll/CenterContainer/LevelGrid"]
+[node name="CPUClickArea" type="PanelContainer" parent="PanelContainer/VBox/ContentHBox/RightPanel/CharactersHBox/CPUSection"]
+custom_minimum_size = Vector2(120, 120)
 layout_mode = 2
 size_flags_horizontal = 4
-custom_minimum_size = Vector2(200, 160)
-theme = ExtResource("3_level_card_theme")
 
-[node name="Border" type="ReferenceRect" parent="PanelContainer/VBox/LevelScroll/CenterContainer/LevelGrid/LevelCard2"]
-visible = false
-layout_mode = 2
-border_color = Color(1, 1, 0, 1)
-border_width = 3.0
-z_index = 10
-
-[node name="VBox" type="VBoxContainer" parent="PanelContainer/VBox/LevelScroll/CenterContainer/LevelGrid/LevelCard2"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-
-[node name="Button" type="Button" parent="PanelContainer/VBox/LevelScroll/CenterContainer/LevelGrid/LevelCard2"]
+[node name="CPUButton" type="Button" parent="PanelContainer/VBox/ContentHBox/RightPanel/CharactersHBox/CPUSection/CPUClickArea"]
+unique_name_in_owner = true
 layout_mode = 2
 flat = true
-mouse_filter = 0
-focus_mode = 2
-theme = ExtResource("3_level_card_theme")
 
-[node name="Thumb" type="TextureRect" parent="PanelContainer/VBox/LevelScroll/CenterContainer/LevelGrid/LevelCard2/VBox"]
+[node name="VBox" type="VBoxContainer" parent="PanelContainer/VBox/ContentHBox/RightPanel/CharactersHBox/CPUSection/CPUClickArea"]
 layout_mode = 2
-custom_minimum_size = Vector2(180, 120)
-size_flags_horizontal = 4
-stretch_mode = 5
 mouse_filter = 2
+alignment = 1
 
-[node name="Name" type="Label" parent="PanelContainer/VBox/LevelScroll/CenterContainer/LevelGrid/LevelCard2/VBox"]
+[node name="CPUPreview" type="TextureRect" parent="PanelContainer/VBox/ContentHBox/RightPanel/CharactersHBox/CPUSection/CPUClickArea/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(96, 96)
 layout_mode = 2
 size_flags_horizontal = 4
+mouse_filter = 2
+expand_mode = 2
+stretch_mode = 4
+
+[node name="CharacterClickHint" type="Label" parent="PanelContainer/VBox/ContentHBox/RightPanel"]
+layout_mode = 2
+text = "Click to select"
 horizontal_alignment = 1
-text = "Level 02"
-mouse_filter = 2
+
+[node name="Separator2" type="HSeparator" parent="PanelContainer/VBox"]
+layout_mode = 2
 
 [node name="Legend" type="VBoxContainer" parent="PanelContainer/VBox"]
 modulate = Color(1, 1, 1, 0.65)
@@ -171,34 +212,34 @@ theme_override_constants/separation = 6
 [node name="LegendTitle" type="Label" parent="PanelContainer/VBox/Legend"]
 modulate = Color(1, 1, 1, 0.75)
 layout_mode = 2
+size_flags_horizontal = 4
 text = "Controls"
 horizontal_alignment = 1
-size_flags_horizontal = 4
 
 [node name="LegendMove" type="Label" parent="PanelContainer/VBox/Legend"]
 layout_mode = 2
+size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 14
 text = "Move: A/D or Left/Right"
 horizontal_alignment = 1
-size_flags_horizontal = 4
 
 [node name="LegendPause" type="Label" parent="PanelContainer/VBox/Legend"]
 layout_mode = 2
+size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 14
 text = "Pause: Esc"
 horizontal_alignment = 1
-size_flags_horizontal = 4
 
 [node name="LegendJump" type="Label" parent="PanelContainer/VBox/Legend"]
 layout_mode = 2
+size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 14
 text = "Jump: W or Space"
 horizontal_alignment = 1
-size_flags_horizontal = 4
 
 [node name="LegendDown" type="Label" parent="PanelContainer/VBox/Legend"]
 layout_mode = 2
+size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 14
 text = "Down: S or Down Arrow"
 horizontal_alignment = 1
-size_flags_horizontal = 4

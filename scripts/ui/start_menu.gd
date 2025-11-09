@@ -1,29 +1,34 @@
 extends Control
 
-@onready var _new_game_button: Button = $PanelContainer/VBox/Buttons/NewGameButton
-@onready var _vbox: VBoxContainer = $PanelContainer/VBox
+# Preload popup scenes
+const LEVEL_SELECT_POPUP_SCENE := preload("res://scenes/ui/level_select_popup.tscn")
+const CHARACTER_SELECT_POPUP_SCENE := preload("res://scenes/ui/character_select_popup.tscn")
+const CPU_SELECT_POPUP_SCENE := preload("res://scenes/ui/cpu_select_popup.tscn")
 
-var _cpu_count_minus: Button = null
-var _cpu_count_plus: Button = null
-var _cpu_count_label: Label = null
-@onready var _card1_container: PanelContainer = $PanelContainer/VBox/LevelScroll/CenterContainer/LevelGrid/LevelCard1
-@onready var _card1_border: ReferenceRect = $PanelContainer/VBox/LevelScroll/CenterContainer/LevelGrid/LevelCard1/Border
-@onready var _card1_button: Button = $PanelContainer/VBox/LevelScroll/CenterContainer/LevelGrid/LevelCard1/Button
-@onready var _card1_thumb: TextureRect = $PanelContainer/VBox/LevelScroll/CenterContainer/LevelGrid/LevelCard1/VBox/Thumb
-@onready var _card1_label: Label = $PanelContainer/VBox/LevelScroll/CenterContainer/LevelGrid/LevelCard1/VBox/Name
-@onready var _card2_container: PanelContainer = $PanelContainer/VBox/LevelScroll/CenterContainer/LevelGrid/LevelCard2
-@onready var _card2_border: ReferenceRect = $PanelContainer/VBox/LevelScroll/CenterContainer/LevelGrid/LevelCard2/Border
-@onready var _card2_button: Button = $PanelContainer/VBox/LevelScroll/CenterContainer/LevelGrid/LevelCard2/Button
-@onready var _card2_thumb: TextureRect = $PanelContainer/VBox/LevelScroll/CenterContainer/LevelGrid/LevelCard2/VBox/Thumb
-@onready var _card2_label: Label = $PanelContainer/VBox/LevelScroll/CenterContainer/LevelGrid/LevelCard2/VBox/Name
+# Main menu button
+@onready var _new_game_button: Button = $PanelContainer/VBox/ContentHBox/Buttons/NewGameButton
+
+# Level navigation buttons
+@onready var _prev_level_button: Button = $"%PrevLevelButton"
+@onready var _next_level_button: Button = $"%NextLevelButton"
+
+# Clickable areas
+@onready var _player_button: Button = $"%PlayerButton"
+@onready var _cpu_button: Button = $"%CPUButton"
+
+# Preview elements
+@onready var _level_thumb: TextureRect = $"%LevelThumb"
+@onready var _selected_level_label: Label = $"%SelectedLevelLabel"
+@onready var _player_preview: TextureRect = $"%PlayerPreview"
+@onready var _cpu_preview: TextureRect = $"%CPUPreview"
+
+# Popup instances
+var _level_select_popup: AcceptDialog = null
+var _character_select_popup: AcceptDialog = null
+var _cpu_select_popup: AcceptDialog = null
 
 var _level_paths: Array[String] = []
-var _card_containers: Array[PanelContainer] = []
-var _card_borders: Array[ReferenceRect] = []
-var _card_buttons: Array[Button] = []
-var _card_thumbs: Array[TextureRect] = []
-var _card_labels: Array[Label] = []
-var _selected_level_index: int = -1
+var _selected_level_index: int = 0
 
 # Simple web-focused debug logger (debug builds only)
 var _debug_enabled: bool = OS.has_feature("web") and OS.is_debug_build()
@@ -52,97 +57,186 @@ func _ready() -> void:
 		add_child(_debug_label)
 		_log("Debug overlay enabled (web).")
 	
-	# Create CPU count selector UI
-	_create_cpu_count_ui()
+	# Create popup instances
+	_setup_popups()
 	
+	# Connect button signals
 	_new_game_button.pressed.connect(_on_new_game_pressed)
+	_prev_level_button.pressed.connect(_on_prev_level_pressed)
+	_next_level_button.pressed.connect(_on_next_level_pressed)
+	_player_button.pressed.connect(_on_character_select_pressed)
+	_cpu_button.pressed.connect(_on_cpu_select_pressed)
+	
 	_new_game_button.grab_focus()
 	
-	# Connect CPU count buttons
-	if _cpu_count_minus:
-		_cpu_count_minus.pressed.connect(_on_cpu_count_minus_pressed)
-	if _cpu_count_plus:
-		_cpu_count_plus.pressed.connect(_on_cpu_count_plus_pressed)
-	if _cpu_count_label:
-		_update_cpu_count_display()
-	
-	# Collect card node arrays and wire their click handlers once
-	_card_containers = [_card1_container, _card2_container]
-	_card_borders = [_card1_border, _card2_border]
-	_card_buttons = [_card1_button, _card2_button]
-	_card_thumbs = [_card1_thumb, _card2_thumb]
-	_card_labels = [_card1_label, _card2_label]
-	_log("Cards available: %d" % _card_buttons.size())
-	for i in range(_card_buttons.size()):
-		var btn := _card_buttons[i]
-		var container := _card_containers[i]
-		container.visible = false
-		if not btn.pressed.is_connected(_on_card_pressed.bind(btn)):
-			btn.pressed.connect(_on_card_pressed.bind(btn))
-		if not btn.gui_input.is_connected(_on_card_gui_input.bind(i)):
-			btn.gui_input.connect(_on_card_gui_input.bind(i))
-	_log("Connected button signals.")
 	call_deferred("_populate_levels")
+	call_deferred("_update_preview_displays")
 
+func _setup_popups() -> void:
+	# Instantiate level select popup
+	_level_select_popup = LEVEL_SELECT_POPUP_SCENE.instantiate()
+	add_child(_level_select_popup)
+	
+	# Instantiate character select popup
+	_character_select_popup = CHARACTER_SELECT_POPUP_SCENE.instantiate()
+	add_child(_character_select_popup)
+	_setup_character_select_popup()
+	
+	# Instantiate CPU select popup
+	_cpu_select_popup = CPU_SELECT_POPUP_SCENE.instantiate()
+	add_child(_cpu_select_popup)
+	_setup_cpu_select_popup()
+
+func _setup_character_select_popup() -> void:
+	# Load character previews
+	var tux_preview: TextureRect = _character_select_popup.get_node("%TuxPreview")
+	var beasty_preview: TextureRect = _character_select_popup.get_node("%BeastyPreview")
+	var gopher_preview: TextureRect = _character_select_popup.get_node("%GopherPreview")
+	
+	tux_preview.texture = _load_character_idle_frame("tux")
+	beasty_preview.texture = _load_character_idle_frame("beasty")
+	gopher_preview.texture = _load_character_idle_frame("gopher")
+	
+	# Connect buttons
+	var tux_btn: Button = _character_select_popup.get_node("%TuxButton")
+	var beasty_btn: Button = _character_select_popup.get_node("%BeastyButton")
+	var gopher_btn: Button = _character_select_popup.get_node("%GopherButton")
+	
+	tux_btn.pressed.connect(_on_player_character_selected.bind("tux"))
+	beasty_btn.pressed.connect(_on_player_character_selected.bind("beasty"))
+	gopher_btn.pressed.connect(_on_player_character_selected.bind("gopher"))
+	
+	# Update button states based on selection
+	_update_character_select_buttons()
+
+func _setup_cpu_select_popup() -> void:
+	# Load character previews
+	var tux_preview: TextureRect = _cpu_select_popup.get_node("%TuxPreview")
+	var beasty_preview: TextureRect = _cpu_select_popup.get_node("%BeastyPreview")
+	var gopher_preview: TextureRect = _cpu_select_popup.get_node("%GopherPreview")
+	
+	tux_preview.texture = _load_character_idle_frame("tux")
+	beasty_preview.texture = _load_character_idle_frame("beasty")
+	gopher_preview.texture = _load_character_idle_frame("gopher")
+	
+	# Connect character buttons
+	var tux_btn: Button = _cpu_select_popup.get_node("%TuxButton")
+	var beasty_btn: Button = _cpu_select_popup.get_node("%BeastyButton")
+	var gopher_btn: Button = _cpu_select_popup.get_node("%GopherButton")
+	
+	tux_btn.pressed.connect(_on_cpu_character_selected.bind("tux"))
+	beasty_btn.pressed.connect(_on_cpu_character_selected.bind("beasty"))
+	gopher_btn.pressed.connect(_on_cpu_character_selected.bind("gopher"))
+	
+	# Connect count buttons
+	var minus_btn: Button = _cpu_select_popup.get_node("%MinusButton")
+	var plus_btn: Button = _cpu_select_popup.get_node("%PlusButton")
+	
+	minus_btn.pressed.connect(_on_cpu_count_minus_pressed)
+	plus_btn.pressed.connect(_on_cpu_count_plus_pressed)
+	
+	# Update button states
+	_update_cpu_select_buttons()
+	_update_cpu_count_display()
 
 func _on_new_game_pressed() -> void:
-	# Load the selected level, or the first available level
+	# Load the selected level
 	var level_to_load: String = ""
 	if _selected_level_index >= 0 and _selected_level_index < _level_paths.size():
 		level_to_load = _level_paths[_selected_level_index]
 	elif _level_paths.size() > 0:
 		level_to_load = _level_paths[0]
 	else:
-		# Fallback to level01 if list could not be built
 		level_to_load = "res://scenes/levels/level01.tscn"
 	
 	if level_to_load != "":
 		get_tree().change_scene_to_file(level_to_load)
 
+func _on_prev_level_pressed() -> void:
+	if _level_paths.size() == 0:
+		return
+	_selected_level_index -= 1
+	if _selected_level_index < 0:
+		_selected_level_index = _level_paths.size() - 1
+	_update_preview_displays()
+	_update_level_navigation_buttons()
+
+func _on_next_level_pressed() -> void:
+	if _level_paths.size() == 0:
+		return
+	_selected_level_index += 1
+	if _selected_level_index >= _level_paths.size():
+		_selected_level_index = 0
+	_update_preview_displays()
+	_update_level_navigation_buttons()
+
+func _on_character_select_pressed() -> void:
+	_update_character_select_buttons()
+	_character_select_popup.popup_centered()
+
+func _on_cpu_select_pressed() -> void:
+	_update_cpu_select_buttons()
+	_update_cpu_count_display()
+	_cpu_select_popup.popup_centered()
+
+func _on_player_character_selected(character_name: String) -> void:
+	GameSettings.set_player_character(character_name)
+	_log("Player character changed to: %s" % character_name)
+	_update_character_select_buttons()
+	_update_preview_displays()
+
+func _on_cpu_character_selected(character_name: String) -> void:
+	GameSettings.set_cpu_character(character_name)
+	_log("CPU character changed to: %s" % character_name)
+	_update_cpu_select_buttons()
+	_update_preview_displays()
 
 func _on_cpu_count_minus_pressed() -> void:
-	if has_node("/root/GameSettings"):
-		GameSettings.decrease_cpu_count()
-		_update_cpu_count_display()
-
+	GameSettings.decrease_cpu_count()
+	_update_cpu_count_display()
 
 func _on_cpu_count_plus_pressed() -> void:
-	if has_node("/root/GameSettings"):
-		GameSettings.increase_cpu_count()
-		_update_cpu_count_display()
+	GameSettings.increase_cpu_count()
+	_update_cpu_count_display()
 
+func _update_character_select_buttons() -> void:
+	var tux_btn: Button = _character_select_popup.get_node("%TuxButton")
+	var beasty_btn: Button = _character_select_popup.get_node("%BeastyButton")
+	var gopher_btn: Button = _character_select_popup.get_node("%GopherButton")
+	
+	var selected := GameSettings.get_player_character()
+	tux_btn.disabled = (selected == "tux")
+	beasty_btn.disabled = (selected == "beasty")
+	gopher_btn.disabled = (selected == "gopher")
+
+func _update_cpu_select_buttons() -> void:
+	var tux_btn: Button = _cpu_select_popup.get_node("%TuxButton")
+	var beasty_btn: Button = _cpu_select_popup.get_node("%BeastyButton")
+	var gopher_btn: Button = _cpu_select_popup.get_node("%GopherButton")
+	
+	var selected := GameSettings.get_cpu_character()
+	tux_btn.disabled = (selected == "tux")
+	beasty_btn.disabled = (selected == "beasty")
+	gopher_btn.disabled = (selected == "gopher")
 
 func _update_cpu_count_display() -> void:
-	if not _cpu_count_label:
-		return
+	var count_label: Label = _cpu_select_popup.get_node("%CountDisplay")
+	var minus_btn: Button = _cpu_select_popup.get_node("%MinusButton")
+	var plus_btn: Button = _cpu_select_popup.get_node("%PlusButton")
 	
-	if not has_node("/root/GameSettings"):
-		_cpu_count_label.text = "1"
-		return
-	
-	var count := GameSettings.get_cpu_count()
-	_cpu_count_label.text = str(count)
-	
-	# Disable buttons at limits
-	if _cpu_count_minus:
-		_cpu_count_minus.disabled = (count <= GameSettings.MIN_CPU_COUNT)
-	if _cpu_count_plus:
-		_cpu_count_plus.disabled = (count >= GameSettings.MAX_CPU_COUNT)
+	count_label.text = str(GameSettings.get_cpu_count())
+	minus_btn.disabled = (GameSettings.get_cpu_count() <= GameSettings.MIN_CPU_COUNT)
+	plus_btn.disabled = (GameSettings.get_cpu_count() >= GameSettings.MAX_CPU_COUNT)
 
 func _populate_levels() -> void:
-	# Clear old entries if any
 	_level_paths.clear()
 	_log("Populate levels started.")
-	for i in range(_card_containers.size()):
-		_card_containers[i].visible = false
-		_card_thumbs[i].texture = null
-		_card_labels[i].text = ""
 	var dir_path := "res://scenes/levels"
-	# Primary: fast static helper (may return empty on some Web builds)
+	
 	var files: PackedStringArray = DirAccess.get_files_at(dir_path)
 	_log("DirAccess.get_files_at -> %d entries" % files.size())
+	
 	if files.is_empty():
-		# Fallback: iterate using DirAccess instance (more broadly supported)
 		var dir := DirAccess.open(dir_path)
 		_log("DirAccess.open(%s) -> %s" % [dir_path, str(dir != null)])
 		if dir:
@@ -154,12 +248,13 @@ func _populate_levels() -> void:
 				entry_name = dir.get_next()
 			dir.list_dir_end()
 		_log("DirAccess iteration -> %d entries" % files.size())
-	# Final fallback: probe known levelXX.tscn names
+	
 	if files.is_empty():
 		for n in range(1, 21):
 			var candidate := "level%02d.tscn" % n
 			files.append(candidate)
 		_log("Probed level names -> %d candidates" % files.size())
+	
 	files.sort()
 	for file_name in files:
 		var lower := String(file_name).to_lower()
@@ -170,79 +265,107 @@ func _populate_levels() -> void:
 		var level_path := dir_path + "/" + file_name
 		var exists := ResourceLoader.exists(level_path)
 		if not exists:
-			# Web fallback: try actually loading to test presence
 			var test := load(level_path)
 			if test != null:
 				exists = true
-		# Even if existence cannot be confirmed (Web), still add candidates;
-		# we'll attempt to load during fill and keep placeholders visible.
 		if exists:
 			_level_paths.append(level_path)
-		else:
-			_level_paths.append(level_path)
-	# If nothing passed the filters, try a conservative fallback list
+	
 	if _level_paths.size() == 0:
 		_log("No filtered .tscn files. Falling back to probing level01..level20.")
 		for n in range(1, 21):
 			var candidate_path := "%s/level%02d.tscn" % [dir_path, n]
 			_level_paths.append(candidate_path)
+	
 	_log("Filtered level paths -> %d" % _level_paths.size())
-	# Fill available cards
-	var to_show: int = min(_level_paths.size(), _card_buttons.size())
-	_log("To show: %d (available buttons=%d)" % [to_show, _card_buttons.size()])
-	for i in range(to_show):
-		# Show placeholder immediately; thumbnail will be filled asynchronously
-		_card_containers[i].visible = true
-		_card_labels[i].text = _fallback_display_name_from_path(_level_paths[i])
-		_card_buttons[i].tooltip_text = _card_labels[i].text
-		_card_buttons[i].disabled = false
-		_log("Showing placeholder for %s" % _level_paths[i])
-		_fill_card(i, _level_paths[i])
-	if to_show == 0:
-		_log("No levels to show. Check export includes or directory listing on Web.")
+	
+	if _level_paths.size() > 0:
+		_selected_level_index = 0
+	
+	_update_level_navigation_buttons()
 
-func _fill_card(index: int, level_path: String) -> void:
-	_log("Filling card %d with %s" % [index, level_path])
+func _populate_level_select_popup() -> void:
+	if not _level_select_popup:
+		return
+	
+	var grid: GridContainer = _level_select_popup.get_node("%LevelGrid")
+	if not grid:
+		return
+	
+	# Clear existing children
+	for child in grid.get_children():
+		child.queue_free()
+	
+	# Create a card for each level
+	for i in range(_level_paths.size()):
+		var level_path := _level_paths[i]
+		var card := _create_level_card(i, level_path)
+		grid.add_child(card)
+
+func _create_level_card(index: int, level_path: String) -> PanelContainer:
+	var card := PanelContainer.new()
+	card.custom_minimum_size = Vector2(240, 180)
+	
+	var vbox := VBoxContainer.new()
+	card.add_child(vbox)
+	
+	var btn := Button.new()
+	btn.flat = true
+	btn.custom_minimum_size = Vector2(240, 180)
+	btn.pressed.connect(_on_level_card_selected.bind(index))
+	card.add_child(btn)
+	
+	var thumb := TextureRect.new()
+	thumb.custom_minimum_size = Vector2(220, 140)
+	thumb.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	thumb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vbox.add_child(thumb)
+	
+	var label := Label.new()
+	label.text = _resolve_level_display_name(level_path)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vbox.add_child(label)
+	
+	# Load thumbnail
+	var thumbnail := LevelThumbnails.get_thumbnail(level_path)
+	if thumbnail:
+		thumb.texture = thumbnail
+	
+	# Highlight selected level
+	if index == _selected_level_index:
+		var border := ReferenceRect.new()
+		border.border_color = Color(1, 1, 0, 1)
+		border.border_width = 3.0
+		border.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		card.add_child(border)
+		border.set_anchors_preset(Control.PRESET_FULL_RECT)
+	
+	return card
+
+func _on_level_card_selected(index: int) -> void:
+	_selected_level_index = index
+	_level_select_popup.hide()
+	_update_preview_displays()
+
+func _resolve_level_display_name(level_path: String) -> String:
 	var packed: PackedScene = load(level_path)
 	if packed == null:
-		_log("Failed to load scene: %s" % level_path)
-		return
+		return _fallback_display_name_from_path(level_path)
+	
 	var level_instance: Node = packed.instantiate()
 	if level_instance == null:
-		_log("Failed to instantiate: %s" % level_path)
-	var display_name := _resolve_level_display_name(level_path, level_instance)
-	var container := _card_containers[index]
-	var btn := _card_buttons[index]
-	var thumb := _card_thumbs[index]
-	var label := _card_labels[index]
-	container.visible = true
-	btn.tooltip_text = display_name
-	btn.text = ""
-	btn.set_meta("level_path", level_path)
-	label.text = display_name
-	thumb.texture = null
-	btn.disabled = false
+		return _fallback_display_name_from_path(level_path)
 	
-	# Use preloaded thumbnail from registry
-	var preloaded_tex := LevelThumbnails.get_thumbnail(level_path)
-	if preloaded_tex != null:
-		thumb.texture = preloaded_tex
-		_log("Loaded thumbnail for %s" % display_name)
-	else:
-		_log("No thumbnail found for %s (run baker in editor)" % display_name)
-	
-	# Auto-select first level
-	if index == 0:
-		_selected_level_index = 0
-		_update_card_selection()
-
-func _resolve_level_display_name(level_path: String, level_instance: Node) -> String:
 	var level_name := ""
 	var info_node: Node = level_instance.get_node_or_null("LevelInfo")
 	if info_node:
 		var candidate := str(info_node.get("level_name"))
 		if candidate.strip_edges() != "":
 			level_name = candidate
+	
+	level_instance.queue_free()
+	
 	if level_name == "":
 		var base := level_path.get_file().get_basename()
 		if base.begins_with("level"):
@@ -251,112 +374,55 @@ func _resolve_level_display_name(level_path: String, level_instance: Node) -> St
 			level_name = base.capitalize()
 	return level_name
 
-func _on_card_pressed(button: Button) -> void:
-	# Find which card was clicked
-	for i in range(_card_buttons.size()):
-		if _card_buttons[i] == button:
-			_selected_level_index = i
-			_update_card_selection()
-			break
-
-func _on_card_gui_input(event: InputEvent, card_index: int) -> void:
-	# Detect double-click to launch level directly
-	if event is InputEventMouseButton:
-		var mouse_event := event as InputEventMouseButton
-		if mouse_event.pressed and mouse_event.button_index == MOUSE_BUTTON_LEFT and mouse_event.double_click:
-			# Double-click detected - launch the level
-			if card_index >= 0 and card_index < _level_paths.size():
-				var level_to_load := _level_paths[card_index]
-				_log("Double-click detected on card %d, launching %s" % [card_index, level_to_load])
-				get_tree().change_scene_to_file(level_to_load)
-
-func _update_card_selection() -> void:
-	# Update visual feedback for selected card (show/hide border)
-	for i in range(_card_borders.size()):
-		if i == _selected_level_index:
-			_card_borders[i].visible = true  # Show yellow border
-			# Move focus to the selected card so theme focus border shows
-			if is_instance_valid(_card_buttons[i]):
-				_card_buttons[i].grab_focus()
-		else:
-			_card_borders[i].visible = false  # Hide border
-			if is_instance_valid(_card_buttons[i]) and _card_buttons[i].has_focus():
-				_card_buttons[i].release_focus()
-
 func _fallback_display_name_from_path(level_path: String) -> String:
 	var base := level_path.get_file().get_basename()
 	if base.begins_with("level"):
 		return "Level " + base.substr(5, base.length() - 5)
 	return base.capitalize()
 
+func _load_character_idle_frame(character_name: String) -> Texture2D:
+	# Try both plural and singular spritesheet folder names
+	var paths := [
+		"res://assets/characters/%s/spritesheets/idle.png" % character_name,
+		"res://assets/characters/%s/spritesheet/idle.png" % character_name
+	]
+	
+	for path in paths:
+		if ResourceLoader.exists(path):
+			var full_texture := load(path) as Texture2D
+			if full_texture:
+				# Create AtlasTexture for first frame (0, 0, 32, 32)
+				var atlas := AtlasTexture.new()
+				atlas.atlas = full_texture
+				atlas.region = Rect2(0, 0, 32, 32)
+				return atlas
+	
+	return null
 
-func _create_cpu_count_ui() -> void:
-	# Create CPU count selector and add it to the VBox (before level scroll)
-	var cpu_section := VBoxContainer.new()
-	cpu_section.name = "CPUCountSection"
-	
-	# Title label
-	var title_label := Label.new()
-	title_label.text = "CPU Opponents"
-	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title_label.add_theme_font_size_override("font_size", 20)
-	cpu_section.add_child(title_label)
-	
-	# Add some spacing
-	var spacer1 := Control.new()
-	spacer1.custom_minimum_size = Vector2(0, 10)
-	cpu_section.add_child(spacer1)
-	
-	# HBox for controls
-	var hbox := HBoxContainer.new()
-	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	cpu_section.add_child(hbox)
-	
-	# Minus button
-	_cpu_count_minus = Button.new()
-	_cpu_count_minus.text = "−"
-	_cpu_count_minus.custom_minimum_size = Vector2(50, 50)
-	_cpu_count_minus.add_theme_font_size_override("font_size", 24)
-	hbox.add_child(_cpu_count_minus)
-	
-	# Spacer
-	var spacer2 := Control.new()
-	spacer2.custom_minimum_size = Vector2(20, 0)
-	hbox.add_child(spacer2)
-	
-	# Count label
-	_cpu_count_label = Label.new()
-	_cpu_count_label.text = "1"
-	_cpu_count_label.custom_minimum_size = Vector2(60, 50)
-	_cpu_count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_cpu_count_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_cpu_count_label.add_theme_font_size_override("font_size", 28)
-	hbox.add_child(_cpu_count_label)
-	
-	# Spacer
-	var spacer3 := Control.new()
-	spacer3.custom_minimum_size = Vector2(20, 0)
-	hbox.add_child(spacer3)
-	
-	# Plus button
-	_cpu_count_plus = Button.new()
-	_cpu_count_plus.text = "+"
-	_cpu_count_plus.custom_minimum_size = Vector2(50, 50)
-	_cpu_count_plus.add_theme_font_size_override("font_size", 24)
-	hbox.add_child(_cpu_count_plus)
-	
-	# Add another spacer after the controls
-	var spacer4 := Control.new()
-	spacer4.custom_minimum_size = Vector2(0, 20)
-	cpu_section.add_child(spacer4)
-	
-	# Find the LevelScroll node and insert CPU section before it
-	var level_scroll := _vbox.get_node_or_null("LevelScroll")
-	if level_scroll:
-		var index := level_scroll.get_index()
-		_vbox.add_child(cpu_section)
-		_vbox.move_child(cpu_section, index)
+func _update_preview_displays() -> void:
+	# Update level preview
+	if _selected_level_index >= 0 and _selected_level_index < _level_paths.size():
+		var level_path := _level_paths[_selected_level_index]
+		_selected_level_label.text = _resolve_level_display_name(level_path)
+		var thumbnail := LevelThumbnails.get_thumbnail(level_path)
+		if thumbnail:
+			_level_thumb.texture = thumbnail
+		else:
+			_level_thumb.texture = null
 	else:
-		# Fallback: add at the beginning
-		_vbox.add_child(cpu_section)
-		_vbox.move_child(cpu_section, 0)
+		_selected_level_label.text = "No Level Selected"
+		_level_thumb.texture = null
+	
+	# Update player character preview
+	var player_char := GameSettings.get_player_character()
+	_player_preview.texture = _load_character_idle_frame(player_char)
+	
+	# Update CPU character preview
+	var cpu_char := GameSettings.get_cpu_character()
+	_cpu_preview.texture = _load_character_idle_frame(cpu_char)
+
+func _update_level_navigation_buttons() -> void:
+	# Enable/disable navigation buttons based on available levels
+	var has_levels := _level_paths.size() > 0
+	_prev_level_button.disabled = not has_levels
+	_next_level_button.disabled = not has_levels

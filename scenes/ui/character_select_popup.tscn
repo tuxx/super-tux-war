@@ -1,0 +1,100 @@
+[gd_scene load_steps=2 format=3 uid="uid://cr76g6yqn7vkl"]
+
+[ext_resource type="Theme" path="res://assets/ui/menu_theme.tres" id="1_theme"]
+
+[node name="CharacterSelectPopup" type="AcceptDialog"]
+title = "Select Your Character"
+initial_position = 2
+size = Vector2i(600, 300)
+dialog_hide_on_ok = true
+theme = ExtResource("1_theme")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 592.0
+offset_bottom = 251.0
+alignment = 1
+theme_override_constants/separation = 40
+
+[node name="TuxOption" type="VBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="TuxClickArea" type="PanelContainer" parent="HBoxContainer/TuxOption"]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+
+[node name="TuxButton" type="Button" parent="HBoxContainer/TuxOption/TuxClickArea"]
+unique_name_in_owner = true
+layout_mode = 2
+flat = true
+
+[node name="TuxPreview" type="TextureRect" parent="HBoxContainer/TuxOption/TuxClickArea"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(96, 96)
+layout_mode = 2
+mouse_filter = 2
+stretch_mode = 4
+expand_mode = 2
+
+[node name="TuxLabel" type="Label" parent="HBoxContainer/TuxOption"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Tux"
+horizontal_alignment = 1
+
+[node name="BeastyOption" type="VBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="BeastyClickArea" type="PanelContainer" parent="HBoxContainer/BeastyOption"]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+
+[node name="BeastyButton" type="Button" parent="HBoxContainer/BeastyOption/BeastyClickArea"]
+unique_name_in_owner = true
+layout_mode = 2
+flat = true
+
+[node name="BeastyPreview" type="TextureRect" parent="HBoxContainer/BeastyOption/BeastyClickArea"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(96, 96)
+layout_mode = 2
+mouse_filter = 2
+stretch_mode = 4
+expand_mode = 2
+
+[node name="BeastyLabel" type="Label" parent="HBoxContainer/BeastyOption"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Beasty"
+horizontal_alignment = 1
+
+[node name="GopherOption" type="VBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="GopherClickArea" type="PanelContainer" parent="HBoxContainer/GopherOption"]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+
+[node name="GopherButton" type="Button" parent="HBoxContainer/GopherOption/GopherClickArea"]
+unique_name_in_owner = true
+layout_mode = 2
+flat = true
+
+[node name="GopherPreview" type="TextureRect" parent="HBoxContainer/GopherOption/GopherClickArea"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(96, 96)
+layout_mode = 2
+mouse_filter = 2
+stretch_mode = 4
+expand_mode = 2
+
+[node name="GopherLabel" type="Label" parent="HBoxContainer/GopherOption"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Gopher"
+horizontal_alignment = 1
+

@@ -41,6 +41,13 @@ func _initial_spawn() -> void:
 			child.queue_free()
 	await get_tree().process_frame
 
+	# Get selected characters from GameSettings
+	var player_character := "tux"
+	var cpu_character := "beasty"
+	if has_node("/root/GameSettings"):
+		player_character = GameSettings.get_player_character()
+		cpu_character = GameSettings.get_cpu_character()
+
 	# Spawn player
 	var player_point := _pick_point_for_role("player", null)
 	var last_point: SpawnPoint = player_point
@@ -49,6 +56,11 @@ func _initial_spawn() -> void:
 		var player := PLAYER_SCENE.instantiate()
 		get_parent().add_child(player)
 		player.global_position = player_point.global_position
+		
+		# Load selected character animations for player
+		if player.has_method("load_character_animations"):
+			player.load_character_animations(player_character)
+		
 		_last_point_by_id[player.get_instance_id()] = player_point
 	
 	# Spawn multiple NPCs based on GameSettings
@@ -61,6 +73,10 @@ func _initial_spawn() -> void:
 			var npc := NPC_SCENE.instantiate()
 			get_parent().add_child(npc)
 			npc.global_position = npc_point.global_position
+			
+			# Load selected character animations for CPU
+			if npc.has_method("load_character_animations"):
+				npc.load_character_animations(cpu_character)
 			
 			# Assign unique color to each CPU (cycles through palette)
 			var color_index := i % CPU_COLORS.size()

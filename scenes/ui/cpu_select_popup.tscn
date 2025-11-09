@@ -1,0 +1,147 @@
+[gd_scene load_steps=2 format=3 uid="uid://dbtlsnr4euwaa"]
+
+[ext_resource type="Theme" path="res://assets/ui/menu_theme.tres" id="1_theme"]
+
+[node name="CPUSelectPopup" type="AcceptDialog"]
+title = "CPU Settings"
+initial_position = 2
+size = Vector2i(700, 450)
+dialog_hide_on_ok = true
+theme = ExtResource("1_theme")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 692.0
+offset_bottom = 401.0
+theme_override_constants/separation = 20
+
+[node name="CharacterLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "CPU Character:"
+horizontal_alignment = 1
+
+[node name="CharacterOptions" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 30
+
+[node name="TuxOption" type="VBoxContainer" parent="VBoxContainer/CharacterOptions"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="TuxClickArea" type="PanelContainer" parent="VBoxContainer/CharacterOptions/TuxOption"]
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 2
+
+[node name="TuxButton" type="Button" parent="VBoxContainer/CharacterOptions/TuxOption/TuxClickArea"]
+unique_name_in_owner = true
+layout_mode = 2
+flat = true
+
+[node name="TuxPreview" type="TextureRect" parent="VBoxContainer/CharacterOptions/TuxOption/TuxClickArea"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+mouse_filter = 2
+stretch_mode = 4
+expand_mode = 2
+
+[node name="TuxLabel" type="Label" parent="VBoxContainer/CharacterOptions/TuxOption"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Tux"
+horizontal_alignment = 1
+
+[node name="BeastyOption" type="VBoxContainer" parent="VBoxContainer/CharacterOptions"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="BeastyClickArea" type="PanelContainer" parent="VBoxContainer/CharacterOptions/BeastyOption"]
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 2
+
+[node name="BeastyButton" type="Button" parent="VBoxContainer/CharacterOptions/BeastyOption/BeastyClickArea"]
+unique_name_in_owner = true
+layout_mode = 2
+flat = true
+
+[node name="BeastyPreview" type="TextureRect" parent="VBoxContainer/CharacterOptions/BeastyOption/BeastyClickArea"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+mouse_filter = 2
+stretch_mode = 4
+expand_mode = 2
+
+[node name="BeastyLabel" type="Label" parent="VBoxContainer/CharacterOptions/BeastyOption"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Beasty"
+horizontal_alignment = 1
+
+[node name="GopherOption" type="VBoxContainer" parent="VBoxContainer/CharacterOptions"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="GopherClickArea" type="PanelContainer" parent="VBoxContainer/CharacterOptions/GopherOption"]
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 2
+
+[node name="GopherButton" type="Button" parent="VBoxContainer/CharacterOptions/GopherOption/GopherClickArea"]
+unique_name_in_owner = true
+layout_mode = 2
+flat = true
+
+[node name="GopherPreview" type="TextureRect" parent="VBoxContainer/CharacterOptions/GopherOption/GopherClickArea"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+mouse_filter = 2
+stretch_mode = 4
+expand_mode = 2
+
+[node name="GopherLabel" type="Label" parent="VBoxContainer/CharacterOptions/GopherOption"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Gopher"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="CountLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Number of CPU Opponents:"
+horizontal_alignment = 1
+
+[node name="CountControls" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 20
+
+[node name="MinusButton" type="Button" parent="VBoxContainer/CountControls"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "−"
+
+[node name="CountDisplay" type="Label" parent="VBoxContainer/CountControls"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(60, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "1"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PlusButton" type="Button" parent="VBoxContainer/CountControls"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "+"
+
