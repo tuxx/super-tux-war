@@ -1,0 +1,8 @@
+[gd_scene format=4]
+
+[ext_resource type="Script" uid="uid://bi6lx7ircvkf" path="res://scripts/dev_menu.gd" id="1_dev_menu"]
+
+[node name="DevMenu" type="Control"]
+script = ExtResource("1_dev_menu")
+
+

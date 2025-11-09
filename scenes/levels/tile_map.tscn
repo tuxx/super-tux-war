@@ -3,7 +3,6 @@
 [ext_resource type="TileSet" uid="uid://bd71pjju517dp" path="res://assets/tilesets/smw_blocks.tres" id="1_tileset"]
 [ext_resource type="Script" uid="uid://b0h4fj6ipj5ur" path="res://scripts/level_navigation.gd" id="2_level_navigation"]
 [ext_resource type="PackedScene" path="res://scenes/objects/spawn_point.tscn" id="4_5oppj"]
-[ext_resource type="Script" uid="uid://bi6lx7ircvkf" path="res://scripts/dev_menu.gd" id="5_dev_menu"]
 [ext_resource type="Script" uid="uid://cuuu6bjbjpxpt" path="res://scripts/pause_manager.gd" id="8_pause_manager"]
 [ext_resource type="Script" uid="uid://by6omvr8nj0ce" path="res://scripts/spawn_manager.gd" id="9_spawn_manager"]
 
@@ -49,10 +48,6 @@ position = Vector2(933, 345)
 [node name="SpawnPoint8" parent="SpawnManager" instance=ExtResource("4_5oppj")]
 position = Vector2(736, 127)
 
-[node name="DevMenu" type="Control" parent="."]
-layout_mode = 3
-anchors_preset = 0
-script = ExtResource("5_dev_menu")
 
 [node name="HUD" type="CanvasLayer" parent="."]
 
