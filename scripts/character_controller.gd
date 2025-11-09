@@ -1,4 +1,5 @@
 extends CharacterBody2D
+class_name CharacterController
 
 # Movement and physics properties
 @export var move_speed: float = GameConstants.PLAYER_MAX_WALK_SPEED
@@ -7,6 +8,7 @@ extends CharacterBody2D
 @export var is_player: bool = false
 @export var character_color: Color = Color.WHITE
 @export var max_fall_speed: float = GameConstants.MAX_FALL_SPEED
+@export var foot_offset: float = 14.0
 
 # Note: Movement feel multipliers removed to match SMW baseline
 # (no apex hang/bonus, no air-control dampening, no per-node speed multipliers)
@@ -29,7 +31,6 @@ var shape_alive: CollisionShape2D
 var shape_dead: CollisionShape2D
 
 # Timers/state for jump assist and drop-through
-var anchor_x: float = NAN
 var death_anim_active: bool = false
 var hit_flash_timer: float = 0.0
 var base_sprite_modulate: Color = Color(1, 1, 1, 1)
@@ -37,6 +38,11 @@ var coyote_timer: float = 0.0
 var jump_buffer_timer: float = 0.0
 var drop_through_timer: float = 0.0
 const DROP_THROUGH_DURATION: float = 0.2
+
+var ai_move_direction: float = 0.0
+var ai_jump_pressed: bool = false
+var ai_jump_released: bool = false
+var ai_drop_pressed: bool = false
 
 func _ready():
 	# Store initial spawn position
@@ -65,10 +71,6 @@ func _ready():
 
 	# Set initial facing toward screen center
 	_face_towards_screen_center()
-
-	# For NPCs, lock horizontal position to prevent drift from collisions
-	if not is_player:
-		anchor_x = global_position.x
 
 func _physics_process(delta: float) -> void:
 	# Handle respawn timer
@@ -112,12 +114,11 @@ func _physics_process(delta: float) -> void:
 	if drop_through_timer > 0.0:
 		drop_through_timer = max(0.0, drop_through_timer - delta)
 	
-	# Handle input for player characters
+	# Handle input for player or AI
 	if is_player:
 		_handle_input()
 	else:
-		# Ensure NPCs do not retain any horizontal drift
-		velocity.x = 0.0
+		_handle_ai_input()
 
 	# Apply gravity
 	_apply_gravity(delta)
@@ -139,10 +140,6 @@ func _physics_process(delta: float) -> void:
 	# Restore platform behavior
 	if drop_through_timer > 0.0:
 		platform_on_leave = old_platform_on_leave
-
-	# Hard-lock NPC X so collision resolution and respawns cannot push it sideways
-	if not is_player and anchor_x == anchor_x: # check for NaN
-		global_position.x = anchor_x
 
 	# Handle buffered jump after landing
 	if is_on_floor() and not was_on_floor and jump_buffer_timer > 0.0:
@@ -183,6 +180,36 @@ func _handle_input() -> void:
 	if Input.is_action_just_released("jump") and velocity.y < 0:
 		if velocity.y < GameConstants.JUMP_EARLY_CLAMP:
 			velocity.y = GameConstants.JUMP_EARLY_CLAMP
+
+func _handle_ai_input() -> void:
+	velocity.x = ai_move_direction * move_speed
+
+	if ai_drop_pressed and is_on_floor():
+		drop_through_timer = DROP_THROUGH_DURATION
+		position.y += 1
+		ai_drop_pressed = false
+		return
+
+	if ai_jump_pressed:
+		if coyote_timer > 0.0:
+			_perform_jump()
+			coyote_timer = 0.0
+		else:
+			jump_buffer_timer = GameConstants.JUMP_BUFFER_TIME
+
+	if ai_jump_released and velocity.y < 0:
+		if velocity.y < GameConstants.JUMP_EARLY_CLAMP:
+			velocity.y = GameConstants.JUMP_EARLY_CLAMP
+
+	ai_jump_pressed = false
+	ai_jump_released = false
+	ai_drop_pressed = false
+
+func set_ai_inputs(move_direction: float, jump_pressed: bool, jump_released: bool, drop_pressed: bool) -> void:
+	ai_move_direction = clamp(move_direction, -1.0, 1.0)
+	ai_jump_pressed = jump_pressed
+	ai_jump_released = jump_released
+	ai_drop_pressed = drop_pressed
 
 func _apply_gravity(delta: float) -> void:
 	# Apply gravity (SMW baseline; no apex/fall multipliers)
@@ -337,3 +364,6 @@ func _face_towards_screen_center() -> void:
 		animated_sprite.flip_h = false
 	else:
 		animated_sprite.flip_h = true
+
+func get_foot_position() -> Vector2:
+	return global_position + Vector2(0, foot_offset)

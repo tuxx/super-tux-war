@@ -1,10 +1,13 @@
-[gd_scene load_steps=4 format=4 uid="uid://brgkt17ijgavn"]
+[gd_scene load_steps=6 format=4 uid="uid://brgkt17ijgavn"]
 
 [ext_resource type="TileSet" uid="uid://bd71pjju517dp" path="res://assets/tilesets/smw_blocks.tres" id="1_tileset"]
+[ext_resource type="Script" uid="uid://b0h4fj6ipj5ur" path="res://scripts/level_navigation.gd" id="2_level_navigation"]
 [ext_resource type="PackedScene" uid="uid://c4dwbqdkxmm42" path="res://scenes/characters/player_character.tscn" id="3_player_scene"]
 [ext_resource type="PackedScene" uid="uid://o0yj30qpa4ym" path="res://scenes/characters/npc_character.tscn" id="4_npc_scene"]
+[ext_resource type="Script" uid="uid://bi6lx7ircvkf" path="res://scripts/dev_menu.gd" id="5_dev_menu"]
 
 [node name="TileMapLevel" type="Node2D"]
+script = ExtResource("2_level_navigation")
 
 [node name="DecorationTileMap" type="TileMapLayer" parent="."]
 z_index = -10
@@ -24,4 +27,9 @@ position = Vector2(162, 561)
 
 [node name="NPC" parent="." instance=ExtResource("4_npc_scene")]
 z_index = 10
-position = Vector2(1134, 272)
+position = Vector2(786, 653)
+
+[node name="DevMenu" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("5_dev_menu")

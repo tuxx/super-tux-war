@@ -1,7 +1,8 @@
-[gd_scene load_steps=7 format=3 uid="uid://o0yj30qpa4ym"]
+[gd_scene load_steps=8 format=3 uid="uid://o0yj30qpa4ym"]
 
 [ext_resource type="Script" uid="uid://de6d7kdce320s" path="res://scripts/character_controller.gd" id="1_character_script"]
 [ext_resource type="Texture2D" uid="uid://c8ut8nmdaudpq" path="res://assets/characters/beasty/spritesheets/idle.png" id="2_vwdjj"]
+[ext_resource type="Script" path="res://scripts/cpu_controller.gd" id="3_cpu_controller"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
 size = Vector2(92, 116)
@@ -26,6 +27,17 @@ animations = [{
 "loop": true,
 "name": &"idle",
 "speed": 4.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_5lcte")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_l1lkx")
+}],
+"loop": true,
+"name": &"run",
+"speed": 5.0
 }]
 
 [node name="NPCCharacter" type="CharacterBody2D"]
@@ -40,6 +52,8 @@ shape = SubResource("RectangleShape2D_1")
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 scale = Vector2(0.25, 0.25)
 sprite_frames = SubResource("SpriteFrames_cpq63")
-animation = &"idle"
+animation = &"run"
 autoplay = "idle"
-frame_progress = 0.7823256
+
+[node name="CPUController" type="Node" parent="."]
+script = ExtResource("3_cpu_controller")

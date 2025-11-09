@@ -1,5 +1,10 @@
 extends Control
 
+const LevelNavigation = preload("res://scripts/level_navigation.gd")
+
+var desired_draw_graph := false
+var desired_draw_jump := false
+
 func _ready() -> void:
 	# Only show in debug builds (disabled in release exports)
 	if not OS.is_debug_build():
@@ -29,12 +34,31 @@ func _ready() -> void:
 	panel.add_child(vbox)
 
 	var title: Label = Label.new()
-	title.text = "Developer"
+	title.text = "Developer Menu"
 	vbox.add_child(title)
 
 	var hint: Label = Label.new()
 	hint.text = "K: Kill player"
 	vbox.add_child(hint)
+
+	vbox.add_child(_make_separator())
+
+	var hint_graph: Label = Label.new()
+	hint_graph.text = "F11: Toggle Nav Graph"
+	vbox.add_child(hint_graph)
+	var hint_jump: Label = Label.new()
+	hint_jump.text = "F12: Toggle Jump Arcs"
+	vbox.add_child(hint_jump)
+
+	var nav := _get_navigation()
+	if nav:
+		desired_draw_graph = nav.debug_draw_graph
+		desired_draw_jump = nav.debug_draw_jump_arcs
+	else:
+		desired_draw_graph = bool(ProjectSettings.get_setting(LevelNavigation.SETTINGS_DRAW_GRAPH, desired_draw_graph))
+		desired_draw_jump = bool(ProjectSettings.get_setting(LevelNavigation.SETTINGS_DRAW_JUMP, desired_draw_jump))
+
+	_apply_toggle_states()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not OS.is_debug_build():
@@ -43,6 +67,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		var key_event: InputEventKey = event as InputEventKey
 		if key_event.keycode == KEY_K:
 			_kill_player()
+		elif key_event.keycode == KEY_F11:
+			desired_draw_graph = not desired_draw_graph
+			_apply_toggle_states()
+		elif key_event.keycode == KEY_F12:
+			desired_draw_jump = not desired_draw_jump
+			_apply_toggle_states()
 
 func _kill_player() -> void:
 	var player: Node = _get_player()
@@ -59,3 +89,35 @@ func _get_player() -> Node:
 	if root and root.has_node("PlayerCharacter"):
 		return root.get_node("PlayerCharacter")
 	return null
+
+
+func _make_separator() -> Control:
+	var sep := HSeparator.new()
+	sep.custom_minimum_size.x = 150
+	return sep
+
+
+func _get_navigation() -> LevelNavigation:
+	var scene := get_tree().current_scene
+	if scene is LevelNavigation:
+		return scene
+	return null
+
+
+func _process(_delta: float) -> void:
+	if not OS.is_debug_build():
+		return
+	_apply_toggle_states()
+
+
+func _apply_toggle_states() -> void:
+	ProjectSettings.set_setting(LevelNavigation.SETTINGS_DRAW_GRAPH, desired_draw_graph)
+	ProjectSettings.set_setting(LevelNavigation.SETTINGS_DRAW_JUMP, desired_draw_jump)
+
+	var nav := _get_navigation()
+	if nav == null:
+		return
+	if nav.debug_draw_graph != desired_draw_graph:
+		nav.set_debug_draw_graph(desired_draw_graph)
+	if nav.debug_draw_jump_arcs != desired_draw_jump:
+		nav.set_debug_draw_jump_arcs(desired_draw_jump)
