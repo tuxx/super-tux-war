@@ -10,6 +10,8 @@ func _ready() -> void:
 	if not OS.is_debug_build():
 		queue_free()
 		return
+	# Ensure the dev menu still processes input/UI when the game is paused
+	process_mode = Node.PROCESS_MODE_ALWAYS
 
 	# Full-rect root to let containers position panel at top-right with margins
 	set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -37,12 +39,15 @@ func _ready() -> void:
 	title.text = "Developer Menu"
 	vbox.add_child(title)
 
-	var hint: Label = Label.new()
-	hint.text = "K: Kill player"
-	vbox.add_child(hint)
+	var hint_pause: Label = Label.new()
+	hint_pause.text = "P: Pause Game"
+	vbox.add_child(hint_pause)
 
 	vbox.add_child(_make_separator())
 
+	var hint_menu: Label = Label.new()
+	hint_menu.text = "F10: Toggle Dev Menu"
+	vbox.add_child(hint_menu)
 	var hint_graph: Label = Label.new()
 	hint_graph.text = "F11: Toggle Nav Graph"
 	vbox.add_child(hint_graph)
@@ -65,30 +70,16 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		var key_event: InputEventKey = event as InputEventKey
-		if key_event.keycode == KEY_K:
-			_kill_player()
+		if key_event.keycode == KEY_P:
+			get_tree().paused = not get_tree().paused
+		elif key_event.keycode == KEY_F10:
+			visible = not visible
 		elif key_event.keycode == KEY_F11:
 			desired_draw_graph = not desired_draw_graph
 			_apply_toggle_states()
 		elif key_event.keycode == KEY_F12:
 			desired_draw_jump = not desired_draw_jump
 			_apply_toggle_states()
-
-func _kill_player() -> void:
-	var player: Node = _get_player()
-	if player and player.has_method("despawn"):
-		player.despawn()
-
-func _get_player() -> Node:
-	# Prefer group lookup for robustness
-	var players: Array[Node] = get_tree().get_nodes_in_group("players")
-	if players.size() > 0:
-		return players[0]
-	# Fallback: try to find by common name
-	var root: Node = get_tree().current_scene
-	if root and root.has_node("PlayerCharacter"):
-		return root.get_node("PlayerCharacter")
-	return null
 
 
 func _make_separator() -> Control:
