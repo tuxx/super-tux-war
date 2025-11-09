@@ -40,6 +40,8 @@ var ai_move_direction: float = 0.0
 var ai_jump_pressed: bool = false
 var ai_jump_released: bool = false
 var ai_drop_pressed: bool = false
+var spawn_protection_timer: float = 0.0
+const SPAWN_PROTECTION_DURATION: float = 0.1
 
 func _ready():
 	# Store initial spawn position
@@ -85,6 +87,17 @@ func _physics_process(delta: float) -> void:
 	
 	if drop_through_timer > 0.0:
 		drop_through_timer = max(0.0, drop_through_timer - delta)
+	
+	# Spawn protection: temporarily disable character-vs-character collisions
+	if spawn_protection_timer > 0.0:
+		spawn_protection_timer = max(0.0, spawn_protection_timer - delta)
+		# Ensure we don't appear on the character layer and don't collide with it
+		set_collision_layer_value(2, false)
+		set_collision_mask_value(2, false)
+	else:
+		# Restore normal character collisions
+		set_collision_layer_value(2, true)
+		set_collision_mask_value(2, true)
 	
 	# Handle input for player or AI
 	if is_player:
@@ -290,6 +303,7 @@ func despawn(killer: CharacterController = null) -> void:
 func _respawn() -> void:
 	is_despawned = false
 	respawn_timer = 0.0
+	spawn_protection_timer = SPAWN_PROTECTION_DURATION
 	
 	# Reset position
 	global_position = spawn_position
@@ -303,9 +317,10 @@ func _respawn() -> void:
 	visible = true
 	
 	# Enable collision
-	set_collision_layer_value(2, true)
 	set_collision_mask_value(1, true)
-	set_collision_mask_value(2, true)
+	# Start with character layer/mask disabled; will be restored after protection
+	set_collision_layer_value(2, false)
+	set_collision_mask_value(2, false)
 
 func _face_towards_screen_center() -> void:
 	if not animated_sprite:
