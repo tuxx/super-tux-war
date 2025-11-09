@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=4 uid="uid://brgkt17ijgavn"]
+[gd_scene load_steps=9 format=4 uid="uid://brgkt17ijgavn"]
 
 [ext_resource type="TileSet" uid="uid://bd71pjju517dp" path="res://assets/tilesets/smw_blocks.tres" id="1_tileset"]
 [ext_resource type="Script" uid="uid://b0h4fj6ipj5ur" path="res://scripts/level_navigation.gd" id="2_level_navigation"]
@@ -6,6 +6,8 @@
 [ext_resource type="PackedScene" uid="uid://o0yj30qpa4ym" path="res://scenes/characters/npc_character.tscn" id="4_npc_scene"]
 [ext_resource type="Script" uid="uid://bi6lx7ircvkf" path="res://scripts/dev_menu.gd" id="5_dev_menu"]
 [ext_resource type="Script" uid="uid://bwo8365ee6b7w" path="res://scripts/score_counter.gd" id="6_score_counter"]
+[ext_resource type="PackedScene" path="res://scenes/ui/pause_menu.tscn" id="7_pause_menu"]
+[ext_resource type="Script" path="res://scripts/pause_manager.gd" id="8_pause_manager"]
 
 [node name="TileMapLevel" type="Node2D"]
 script = ExtResource("2_level_navigation")
@@ -62,3 +64,8 @@ grow_vertical = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 theme_override_constants/separation = 12
+
+[node name="PauseMenu" parent="HUD" instance=ExtResource("7_pause_menu")]
+
+[node name="PauseManager" type="Node" parent="."]
+script = ExtResource("8_pause_manager")

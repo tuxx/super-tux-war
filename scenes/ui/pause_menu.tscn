@@ -1,0 +1,98 @@
+[gd_scene format=4]
+
+[ext_resource type="Script" path="res://scripts/pause_menu.gd" id="1_pause_menu_script"]
+[ext_resource type="Theme" path="res://assets/ui/menu_theme.tres" id="2_menu_theme"]
+
+[node name="PauseMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 1
+script = ExtResource("1_pause_menu_script")
+theme = ExtResource("2_menu_theme")
+
+[node name="Dimmer" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.5)
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="PanelContainer" type="PanelContainer" parent="CenterContainer"]
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="CenterContainer/PanelContainer"]
+layout_mode = 2
+theme_override_constants/separation = 16
+custom_minimum_size = Vector2(420, 0)
+
+[node name="Title" type="Label" parent="CenterContainer/PanelContainer/VBox"]
+layout_mode = 2
+text = "Paused"
+horizontal_alignment = 1
+custom_minimum_size = Vector2(0, 32)
+theme_override_font_sizes/font_size = 40
+
+[node name="SeparatorTop" type="HSeparator" parent="CenterContainer/PanelContainer/VBox"]
+layout_mode = 2
+
+[node name="Buttons" type="VBoxContainer" parent="CenterContainer/PanelContainer/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="ResumeButton" type="Button" parent="CenterContainer/PanelContainer/VBox/Buttons"]
+layout_mode = 2
+text = "Resume"
+size_flags_horizontal = 4
+custom_minimum_size = Vector2(0, 52)
+theme_override_font_sizes/font_size = 26
+
+[node name="NewGameButton" type="Button" parent="CenterContainer/PanelContainer/VBox/Buttons"]
+layout_mode = 2
+text = "New Game"
+size_flags_horizontal = 4
+custom_minimum_size = Vector2(0, 52)
+theme_override_font_sizes/font_size = 26
+
+[node name="SeparatorBottom" type="HSeparator" parent="CenterContainer/PanelContainer/VBox"]
+layout_mode = 2
+
+[node name="Legend" type="VBoxContainer" parent="CenterContainer/PanelContainer/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+modulate = Color(1, 1, 1, 0.65)
+
+[node name="LegendTitle" type="Label" parent="CenterContainer/PanelContainer/VBox/Legend"]
+layout_mode = 2
+text = "Controls"
+horizontal_alignment = 1
+modulate = Color(1, 1, 1, 0.75)
+
+[node name="LegendPause" type="Label" parent="CenterContainer/PanelContainer/VBox/Legend"]
+layout_mode = 2
+text = "Resume: Esc"
+theme_override_font_sizes/font_size = 14
+
+[node name="LegendMove" type="Label" parent="CenterContainer/PanelContainer/VBox/Legend"]
+layout_mode = 2
+text = "Move: A/D or Left/Right"
+theme_override_font_sizes/font_size = 14
+
+[node name="LegendJump" type="Label" parent="CenterContainer/PanelContainer/VBox/Legend"]
+layout_mode = 2
+text = "Jump: W or Space"
+theme_override_font_sizes/font_size = 14
+
+[node name="LegendDown" type="Label" parent="CenterContainer/PanelContainer/VBox/Legend"]
+layout_mode = 2
+text = "Down: S or Down Arrow"
+theme_override_font_sizes/font_size = 14
+
+
