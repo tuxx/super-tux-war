@@ -10,10 +10,11 @@ A fan-inspired arena platformer built with Godot 4, following Super Mario War co
 
 ---
 
-<img width="1283" height="706" alt="2025-11-09_10-01-31" src="https://github.com/user-attachments/assets/77f84a5c-082f-4bd8-af27-f50cd4c1117e" />
+<img width="1278" height="704" src="https://github.com/user-attachments/assets/728ad65c-ea4e-4b1b-aeba-768ae85eae55" />
 
 
-*Current tile map test level*
+
+*Current tile map test level with 7 cpu players*
 
 - *Tux*: Player character
 - *FreeBSD Beastie*: NPC
