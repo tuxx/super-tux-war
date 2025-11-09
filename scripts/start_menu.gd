@@ -20,9 +20,32 @@ var _card_thumbs: Array[TextureRect] = []
 var _card_labels: Array[Label] = []
 var _selected_level_index: int = -1
 
+# Simple web-focused debug logger (debug builds only)
+var _debug_enabled: bool = OS.has_feature("web") and OS.is_debug_build()
+var _debug_label: Label = null
+
+func _log(message: String) -> void:
+	print("[StartMenu] ", message)
+	if _debug_enabled and is_instance_valid(_debug_label):
+		var current := _debug_label.text
+		if current.length() > 2000:
+			current = current.substr(max(0, current.length() - 1500), 1500)
+		_debug_label.text = current + ("\n" if current != "" else "") + message
+
 func _ready() -> void:
 	# Full-rect root
 	set_anchors_preset(Control.PRESET_FULL_RECT)
+	if _debug_enabled:
+		_debug_label = Label.new()
+		_debug_label.name = "Debug"
+		_debug_label.modulate = Color(1, 1, 1, 0.8)
+		_debug_label.add_theme_font_size_override("font_size", 12)
+		_debug_label.autowrap_mode = TextServer.AUTOWRAP_WORD
+		_debug_label.set_anchors_preset(Control.PRESET_TOP_LEFT)
+		_debug_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_debug_label.custom_minimum_size = Vector2(600, 0)
+		add_child(_debug_label)
+		_log("Debug overlay enabled (web).")
 	_new_game_button.pressed.connect(_on_new_game_pressed)
 	_new_game_button.grab_focus()
 	# Collect card node arrays and wire their click handlers once
@@ -31,12 +54,14 @@ func _ready() -> void:
 	_card_buttons = [_card1_button, _card2_button]
 	_card_thumbs = [_card1_thumb, _card2_thumb]
 	_card_labels = [_card1_label, _card2_label]
+	_log("Cards available: %d" % _card_buttons.size())
 	for i in range(_card_buttons.size()):
 		var btn := _card_buttons[i]
 		var container := _card_containers[i]
 		container.visible = false
 		if not btn.pressed.is_connected(_on_card_pressed.bind(btn)):
 			btn.pressed.connect(_on_card_pressed.bind(btn))
+	_log("Connected button signals.")
 	call_deferred("_populate_levels")
 
 
@@ -57,12 +82,34 @@ func _on_new_game_pressed() -> void:
 func _populate_levels() -> void:
 	# Clear old entries if any
 	_level_paths.clear()
+	_log("Populate levels started.")
 	for i in range(_card_containers.size()):
 		_card_containers[i].visible = false
 		_card_thumbs[i].texture = null
 		_card_labels[i].text = ""
 	var dir_path := "res://scenes/levels"
+	# Primary: fast static helper (may return empty on some Web builds)
 	var files: PackedStringArray = DirAccess.get_files_at(dir_path)
+	_log("DirAccess.get_files_at -> %d entries" % files.size())
+	if files.is_empty():
+		# Fallback: iterate using DirAccess instance (more broadly supported)
+		var dir := DirAccess.open(dir_path)
+		_log("DirAccess.open(%s) -> %s" % [dir_path, str(dir != null)])
+		if dir:
+			dir.list_dir_begin()
+			var name := dir.get_next()
+			while name != "":
+				if not dir.current_is_dir():
+					files.append(name)
+				name = dir.get_next()
+			dir.list_dir_end()
+		_log("DirAccess iteration -> %d entries" % files.size())
+	# Final fallback: probe known levelXX.tscn names
+	if files.is_empty():
+		for n in range(1, 21):
+			var candidate := "level%02d.tscn" % n
+			files.append(candidate)
+		_log("Probed level names -> %d candidates" % files.size())
 	files.sort()
 	for file_name in files:
 		var lower := String(file_name).to_lower()
@@ -71,19 +118,48 @@ func _populate_levels() -> void:
 		if not lower.begins_with("level"):
 			continue
 		var level_path := dir_path + "/" + file_name
-		if not ResourceLoader.exists(level_path):
-			continue
-		_level_paths.append(level_path)
+		var exists := ResourceLoader.exists(level_path)
+		if not exists:
+			# Web fallback: try actually loading to test presence
+			var test := load(level_path)
+			if test != null:
+				exists = true
+		# Even if existence cannot be confirmed (Web), still add candidates;
+		# we'll attempt to load during fill and keep placeholders visible.
+		if exists:
+			_level_paths.append(level_path)
+		else:
+			_level_paths.append(level_path)
+	# If nothing passed the filters, try a conservative fallback list
+	if _level_paths.size() == 0:
+		_log("No filtered .tscn files. Falling back to probing level01..level20.")
+		for n in range(1, 21):
+			var candidate_path := "%s/level%02d.tscn" % [dir_path, n]
+			_level_paths.append(candidate_path)
+	_log("Filtered level paths -> %d" % _level_paths.size())
 	# Fill available cards
 	var to_show: int = min(_level_paths.size(), _card_buttons.size())
+	_log("To show: %d (available buttons=%d)" % [to_show, _card_buttons.size()])
 	for i in range(to_show):
+		# Show placeholder immediately; thumbnail will be filled asynchronously
+		_card_containers[i].visible = true
+		_card_labels[i].text = _fallback_display_name_from_path(_level_paths[i])
+		_card_buttons[i].tooltip_text = _card_labels[i].text
+		_card_buttons[i].disabled = false
+		_log("Showing placeholder for %s" % _level_paths[i])
 		await _fill_card(i, _level_paths[i])
+	if to_show == 0:
+		_log("No levels to show. Check export includes or directory listing on Web.")
 
 func _fill_card(index: int, level_path: String) -> void:
+	_log("Filling card %d with %s" % [index, level_path])
 	var packed: PackedScene = load(level_path)
 	if packed == null:
+		_log("Failed to load scene: %s" % level_path)
 		return
 	var level_instance: Node = packed.instantiate()
+	if level_instance == null:
+		_log("Failed to instantiate: %s" % level_path)
 	var display_name := _resolve_level_display_name(level_path, level_instance)
 	var container := _card_containers[index]
 	var btn := _card_buttons[index]
@@ -96,10 +172,14 @@ func _fill_card(index: int, level_path: String) -> void:
 	label.text = display_name
 	thumb.texture = null
 	btn.disabled = false
-	await get_tree().process_frame
-	var texture: Texture2D = await _generate_thumbnail_for_instance(level_instance)
-	if is_instance_valid(thumb) and texture != null:
-		thumb.texture = texture
+	
+	# Use preloaded thumbnail from registry
+	var preloaded_tex := LevelThumbnails.get_thumbnail(level_path)
+	if preloaded_tex != null:
+		thumb.texture = preloaded_tex
+		_log("Loaded thumbnail for %s" % display_name)
+	else:
+		_log("No thumbnail found for %s (run baker in editor)" % display_name)
 	
 	# Auto-select first level
 	if index == 0:
@@ -142,63 +222,8 @@ func _update_card_selection() -> void:
 			if is_instance_valid(_card_buttons[i]) and _card_buttons[i].has_focus():
 				_card_buttons[i].release_focus()
 
-func _generate_thumbnail_for_instance(level_instance: Node) -> Texture2D:
-	var subvp := SubViewport.new()
-	subvp.size = Vector2i(256, 144)
-	subvp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
-	subvp.disable_3d = true
-	subvp.transparent_bg = false
-	add_child(subvp)
-	# Place level under a container so we can scale/position to fit the whole map
-	var container := Node2D.new()
-	subvp.add_child(container)
-	container.add_child(level_instance)
-	# Compute bounds across all TileMapLayer nodes
-	var bounds: Rect2 = _compute_level_bounds(level_instance)
-	# Move top-left to origin and scale to fit
-	var available: Vector2 = Vector2(subvp.size)
-	var scale_factor: float = min(
-		available.x / max(1.0, bounds.size.x),
-		available.y / max(1.0, bounds.size.y)
-	)
-	container.scale = Vector2(scale_factor, scale_factor)
-	var scaled_size: Vector2 = bounds.size * scale_factor
-	var padding: Vector2 = (available - scaled_size) * 0.5
-	container.position = -Vector2(bounds.position) * scale_factor + padding
-	# Wait for the viewport to fully render the tiles
-	await RenderingServer.frame_post_draw
-	await get_tree().process_frame
-	await RenderingServer.frame_post_draw
-	var vp_tex: ViewportTexture = subvp.get_texture()
-	# Try to convert to ImageTexture to detach from the SubViewport
-	var out_tex: Texture2D = null
-	var img: Image = vp_tex.get_image()
-	if img != null:
-		img.resize(256, 144)
-		out_tex = ImageTexture.create_from_image(img)
-	subvp.queue_free()
-	# If conversion failed, fall back to viewport texture (rare drivers)
-	return out_tex if out_tex != null else vp_tex
-
-func _compute_level_bounds(root: Node) -> Rect2:
-	var combined := Rect2()
-	var any := false
-	for child in root.get_children():
-		if child is TileMapLayer:
-			var layer := child as TileMapLayer
-			var used := layer.get_used_rect()
-			if used.size == Vector2i.ZERO:
-				continue
-			var ts := Vector2(32, 32)
-			if layer.tile_set != null:
-				ts = Vector2(layer.tile_set.tile_size)
-			var rect_world := Rect2(Vector2(used.position) * ts, Vector2(used.size) * ts)
-			if not any:
-				combined = rect_world
-				any = true
-			else:
-				combined = combined.merge(rect_world)
-	# Fallback in case there were no tiles
-	if not any:
-		return Rect2(Vector2.ZERO, Vector2(256, 144))
-	return combined
+func _fallback_display_name_from_path(level_path: String) -> String:
+	var base := level_path.get_file().get_basename()
+	if base.begins_with("level"):
+		return "Level " + base.substr(5, base.length() - 5)
+	return base.capitalize()
