@@ -5,7 +5,6 @@
 [ext_resource type="PackedScene" path="res://scenes/objects/spawn_point.tscn" id="4_5oppj"]
 [ext_resource type="Script" uid="uid://bi6lx7ircvkf" path="res://scripts/dev_menu.gd" id="5_dev_menu"]
 [ext_resource type="Script" uid="uid://bwo8365ee6b7w" path="res://scripts/score_counter.gd" id="6_score_counter"]
-[ext_resource type="PackedScene" path="res://scenes/ui/pause_menu.tscn" id="7_pause_menu"]
 [ext_resource type="Script" uid="uid://cuuu6bjbjpxpt" path="res://scripts/pause_manager.gd" id="8_pause_manager"]
 [ext_resource type="Script" uid="uid://by6omvr8nj0ce" path="res://scripts/spawn_manager.gd" id="9_spawn_manager"]
 
@@ -71,11 +70,6 @@ grow_vertical = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 theme_override_constants/separation = 12
-
-[node name="PauseMenu" parent="HUD" instance=ExtResource("7_pause_menu")]
-visible = false
-grow_horizontal = 2
-grow_vertical = 2
 
 [node name="PauseManager" type="Node" parent="."]
 script = ExtResource("8_pause_manager")

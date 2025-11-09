@@ -1,16 +1,12 @@
 extends Node
 
 var _pause_menu: Control
+const PAUSE_MENU_SCENE := preload("res://scenes/ui/pause_menu.tscn")
 
 func _ready() -> void:
 	# Receive input even when the game is paused
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	# Try to find the pause menu robustly
-	_pause_menu = get_node_or_null("../HUD/PauseMenu")
-	if _pause_menu == null:
-		var scene := get_tree().current_scene
-		if scene:
-			_pause_menu = scene.get_node_or_null("HUD/PauseMenu")
+	# Do not require PauseMenu to exist in scenes; we'll create it on demand
 
 
 func _input(event: InputEvent) -> void:
@@ -27,6 +23,22 @@ func _toggle_pause() -> void:
 		if is_instance_valid(_pause_menu):
 			_pause_menu.visible = false
 	else:
+		_ensure_pause_menu()
 		if is_instance_valid(_pause_menu):
 			_pause_menu.visible = true
 		get_tree().paused = true
+
+
+func _ensure_pause_menu() -> void:
+	if is_instance_valid(_pause_menu):
+		return
+	var instance := PAUSE_MENU_SCENE.instantiate()
+	# Prefer adding to HUD CanvasLayer if present for proper overlay ordering
+	var root := get_tree().current_scene
+	var hud := root.get_node_or_null("HUD") if root else null
+	if hud:
+		hud.add_child(instance)
+	else:
+		# Fallback: add next to manager
+		get_parent().add_child(instance)
+	_pause_menu = instance as Control
