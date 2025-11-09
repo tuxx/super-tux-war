@@ -48,7 +48,7 @@ func _on_game_resumed() -> void:
 	if is_instance_valid(_pause_menu):
 		_pause_menu.visible = false
 
-func _on_match_ended(winner: CharacterController) -> void:
+func _on_match_ended(_winner: CharacterController) -> void:
 	# Clean up old game over screen if it exists
 	if is_instance_valid(_game_over_screen):
 		_game_over_screen.queue_free()

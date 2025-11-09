@@ -17,8 +17,8 @@ var spawn_protection_timer: float = 0.0
 const RESPAWN_TIME: float = 2.0
 const SPAWN_PROTECTION_DURATION: float = 1.0
 
-func _init(char: CharacterBody2D) -> void:
-	character = char
+func _init(character_body: CharacterBody2D) -> void:
+	character = character_body
 
 func initialize() -> void:
 	spawn_position = character.global_position
@@ -86,6 +86,9 @@ func respawn() -> void:
 	character.global_position = spawn_position
 	character.velocity = Vector2.ZERO
 	
+	# Play spawn sound
+	AudioManager.play_spawn(character.global_position)
+	
 	# Restore collision shape
 	if shape_alive:
 		shape_alive.disabled = false
@@ -112,4 +115,3 @@ func get_foot_position() -> Vector2:
 	if foot_offset == null:
 		foot_offset = 14.0
 	return character.global_position + Vector2(0, foot_offset)
-

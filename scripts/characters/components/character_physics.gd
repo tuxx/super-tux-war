@@ -27,8 +27,8 @@ var ai_jump_pressed: bool = false
 var ai_jump_released: bool = false
 var ai_drop_pressed: bool = false
 
-func _init(char: CharacterBody2D) -> void:
-	character = char
+func _init(character_body: CharacterBody2D) -> void:
+	character = character_body
 
 ## Updates physics timers and applies movement. Returns previous velocity Y for collision detection.
 func update_physics(delta: float, is_player: bool) -> float:
@@ -144,6 +144,7 @@ func _apply_gravity(delta: float) -> void:
 
 func _perform_jump() -> void:
 	character.velocity.y = jump_velocity
+	AudioManager.play_jump(character.global_position)
 
 func _wrap_after_motion() -> void:
 	if not wrap_enabled:
@@ -170,4 +171,3 @@ func _wrap_after_motion() -> void:
 		pos.y = bottom - wrap_offset
 	
 	character.global_position = pos
-

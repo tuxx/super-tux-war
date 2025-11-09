@@ -17,8 +17,8 @@ const SPAWN_BOUNCE_THRESHOLD: float = 0.6
 
 var spawn_animation_timer: float = 0.0
 
-func _init(char: CharacterBody2D) -> void:
-	character = char
+func _init(character_body: CharacterBody2D) -> void:
+	character = character_body
 
 func initialize() -> void:
 	animated_sprite = character.get_node_or_null("AnimatedSprite2D")
@@ -136,4 +136,3 @@ func _ease_out_back(t: float) -> float:
 
 func _ease_out_quad(t: float) -> float:
 	return 1.0 - (1.0 - t) * (1.0 - t)
-
