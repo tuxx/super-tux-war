@@ -3,6 +3,9 @@ class_name CharacterController
 
 signal enemy_killed(victim: CharacterBody2D)
 
+# Preload gravestone scene
+const GRAVESTONE_SCENE = preload("res://scenes/objects/gravestone.tscn")
+
 # Movement and physics properties
 @export var move_speed: float = GameConstants.PLAYER_MAX_WALK_SPEED
 @export var jump_velocity: float = GameConstants.JUMP_VELOCITY
@@ -12,11 +15,6 @@ signal enemy_killed(victim: CharacterBody2D)
 @export var character_asset_name: String = ""
 @export var max_fall_speed: float = GameConstants.MAX_FALL_SPEED
 @export var foot_offset: float = 14.0
-
-# Note: Movement feel multipliers removed to match SMW baseline
-# (no apex hang/bonus, no air-control dampening, no per-node speed multipliers)
-@export var death_hold_before_respawn: float = 0.2	# Hold last death frame before respawn
-@export var hit_flash_duration: float = 0.2		# Time to tint red on hit
 
 # Boundary wrap settings
 @export var wrap_enabled: bool = true
@@ -31,12 +29,8 @@ const RESPAWN_TIME: float = 2.0
 # Animation
 var animated_sprite: AnimatedSprite2D
 var shape_alive: CollisionShape2D
-var shape_dead: CollisionShape2D
 
 # Timers/state for jump assist and drop-through
-var death_anim_active: bool = false
-var hit_flash_timer: float = 0.0
-var base_sprite_modulate: Color = Color(1, 1, 1, 1)
 var coyote_timer: float = 0.0
 var jump_buffer_timer: float = 0.0
 var drop_through_timer: float = 0.0
@@ -53,15 +47,10 @@ func _ready():
 	
 	# Get animated sprite reference
 	animated_sprite = get_node_or_null("AnimatedSprite2D")
-	if animated_sprite:
-		base_sprite_modulate = animated_sprite.modulate
 	shape_alive = get_node_or_null("CollisionShape2D") as CollisionShape2D
-	shape_dead = get_node_or_null("CollisionShape2D_Dead") as CollisionShape2D
 	# Ensure correct initial shape state
 	if shape_alive:
 		shape_alive.disabled = false
-	if shape_dead:
-		shape_dead.disabled = true
 
 	add_to_group("characters")
 	# Register player in group for dev tools and gameplay systems
@@ -80,27 +69,6 @@ func _physics_process(delta: float) -> void:
 	# Handle respawn timer
 	if is_despawned:
 		respawn_timer += delta
-		# If we're playing a death animation, allow physics so the body falls to the floor
-		if death_anim_active:
-			# Simple gravity while dead (no jump modifiers)
-			velocity.x = 0.0
-			velocity.y = clamp(velocity.y + gravity * delta, -max_fall_speed, max_fall_speed)
-			move_and_slide()
-			# Manage hit flash tint
-			if animated_sprite:
-				if hit_flash_timer > 0.0:
-					hit_flash_timer = max(0.0, hit_flash_timer - delta)
-					animated_sprite.modulate = Color(1, 0.25, 0.25, 1)
-				else:
-					animated_sprite.modulate = base_sprite_modulate
-			# Ensure last frame is shown shortly before respawn
-			if animated_sprite and animated_sprite.sprite_frames and animated_sprite.animation == "death":
-				if respawn_timer >= (RESPAWN_TIME - death_hold_before_respawn):
-					var frames: SpriteFrames = animated_sprite.sprite_frames
-					var last_idx: int = max(0, frames.get_frame_count("death") - 1)
-					animated_sprite.stop()
-					animated_sprite.animation = "death"
-					animated_sprite.frame = last_idx
 		if respawn_timer >= RESPAWN_TIME:
 			_respawn()
 		return
@@ -308,41 +276,20 @@ func despawn(killer: CharacterController = null) -> void:
 	if killer and killer != self:
 		killer.enemy_killed.emit(self)
 	
-	var has_death_anim: bool = false
-	if animated_sprite:
-		var frames: SpriteFrames = animated_sprite.sprite_frames
-		has_death_anim = frames != null and frames.has_animation("death")
+	# Spawn gravestone at character position
+	_spawn_gravestone()
 	
-	if has_death_anim:
-		# Play death animation and allow body to fall under gravity
-		animated_sprite.sprite_frames.set_animation_loop("death", false)
-		animated_sprite.play("death")
-		death_anim_active = true
-		# Keep collisions enabled so we can land on the floor
-		# Start hit flash tint
-		hit_flash_timer = hit_flash_duration
-		# Switch to smaller dead collision shape if available (player only)
-		if is_player:
-			if shape_alive:
-				shape_alive.disabled = true
-			if shape_dead:
-				shape_dead.disabled = false
-	else:
-		# No death animation: hide immediately and disable collisions
-		visible = false
-		set_collision_layer_value(1, false)
-		set_collision_mask_value(1, false)
-		# Ensure no collision shapes remain active
-		if shape_alive:
-			shape_alive.disabled = true
-		if shape_dead:
-			shape_dead.disabled = true
+	# Hide character and disable collisions immediately
+	visible = false
+	set_collision_layer_value(2, false)
+	set_collision_mask_value(1, false)
+	set_collision_mask_value(2, false)
+	if shape_alive:
+		shape_alive.disabled = true
 
 func _respawn() -> void:
 	is_despawned = false
 	respawn_timer = 0.0
-	death_anim_active = false
-	hit_flash_timer = 0.0
 	
 	# Reset position
 	global_position = spawn_position
@@ -351,17 +298,14 @@ func _respawn() -> void:
 	# Restore alive collision shape
 	if shape_alive:
 		shape_alive.disabled = false
-	if shape_dead:
-		shape_dead.disabled = true
 	
 	# Show the character
 	visible = true
-	if animated_sprite:
-		animated_sprite.modulate = base_sprite_modulate
 	
 	# Enable collision
-	set_collision_layer_value(1, true)
+	set_collision_layer_value(2, true)
 	set_collision_mask_value(1, true)
+	set_collision_mask_value(2, true)
 
 func _face_towards_screen_center() -> void:
 	if not animated_sprite:
@@ -375,3 +319,13 @@ func _face_towards_screen_center() -> void:
 
 func get_foot_position() -> Vector2:
 	return global_position + Vector2(0, foot_offset)
+
+func _spawn_gravestone() -> void:
+	# Create gravestone instance
+	var gravestone = GRAVESTONE_SCENE.instantiate()
+	gravestone.global_position = global_position
+	
+	# Add to scene tree (add to the level/root)
+	var level = get_tree().current_scene
+	if level:
+		level.add_child(gravestone)
