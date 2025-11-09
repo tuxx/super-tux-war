@@ -213,7 +213,27 @@ func _update_animation() -> void:
 		return
 	
 	# Determine which animation to play
-	if abs(velocity.x) > 10:  # Moving horizontally
+	if not is_on_floor():  # In the air (jumping or falling)
+		# Play jump animation if it exists, otherwise fall back to idle/run
+		if animated_sprite.sprite_frames.has_animation("jump"):
+			if animated_sprite.animation != "jump":
+				animated_sprite.animation = "jump"
+			# Keep on frame 2 (index 1) while in the air
+			animated_sprite.stop()
+			animated_sprite.frame = 1
+		elif abs(velocity.x) > 10:
+			if animated_sprite.animation != "run":
+				animated_sprite.play("run")
+		else:
+			if animated_sprite.animation != "idle":
+				animated_sprite.play("idle")
+		
+		# Flip sprite based on direction
+		if velocity.x < 0:
+			animated_sprite.flip_h = true
+		elif velocity.x > 0:
+			animated_sprite.flip_h = false
+	elif abs(velocity.x) > 10:  # Moving horizontally
 		if animated_sprite.animation != "run":
 			animated_sprite.play("run")
 		

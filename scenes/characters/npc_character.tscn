@@ -47,6 +47,17 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
+"texture": SubResource("AtlasTexture_l1lkx")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_cpq63")
+}],
+"loop": true,
+"name": &"jump",
+"speed": 4.0
+}, {
+"frames": [{
+"duration": 1.0,
 "texture": SubResource("AtlasTexture_oiye3")
 }, {
 "duration": 1.0,
@@ -78,7 +89,7 @@ shape = SubResource("RectangleShape2D_1")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_cpq63")
-animation = &"idle"
+animation = &"jump"
 autoplay = "idle"
 
 [node name="CPUController" type="Node" parent="."]
