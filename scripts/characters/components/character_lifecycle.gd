@@ -58,6 +58,9 @@ func despawn(killer: CharacterController = null) -> void:
 	respawn_timer = 0.0
 	character.velocity = Vector2.ZERO
 	
+	# Play death sound
+	AudioManager.play_death(character.global_position)
+	
 	if killer and killer != character:
 		EventBus.character_killed.emit(killer, character)
 	
@@ -85,6 +88,9 @@ func respawn() -> void:
 	
 	character.global_position = spawn_position
 	character.velocity = Vector2.ZERO
+	
+	# Play spawn sound
+	AudioManager.play_spawn(character.global_position)
 	
 	# Restore collision shape
 	if shape_alive:

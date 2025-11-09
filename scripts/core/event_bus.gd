@@ -13,7 +13,7 @@ signal game_resumed
 @warning_ignore("unused_signal")
 signal game_state_changed(from_state: String, to_state: String)
 
-## Match events
+## Match evyents
 @warning_ignore("unused_signal")
 signal match_started
 @warning_ignore("unused_signal")
