@@ -17,9 +17,9 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-UIManager="*res://scripts/ui_manager.gd"
-InputManager="*res://scripts/input_manager.gd"
-GameSettings="*res://scripts/game_settings.gd"
+UIManager="*res://scripts/ui/ui_manager.gd"
+InputManager="*res://scripts/core/input_manager.gd"
+GameSettings="*res://scripts/core/game_settings.gd"
 
 [display]
 

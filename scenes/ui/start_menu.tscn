@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://b8n5x40uc2bsb"]
 
-[ext_resource type="Script" uid="uid://da5q4e6jjjhuq" path="res://scripts/start_menu.gd" id="1_start_menu_script"]
+[ext_resource type="Script" uid="uid://da5q4e6jjjhuq" path="res://scripts/ui/start_menu.gd" id="1_start_menu_script"]
 [ext_resource type="Theme" path="res://assets/ui/menu_theme.tres" id="2_menu_theme"]
 [ext_resource type="Theme" path="res://assets/ui/level_card_theme.tres" id="3_level_card_theme"]
 

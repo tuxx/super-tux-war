@@ -1,7 +1,7 @@
 extends Node2D
 class_name LevelNavigation
 
-const GAME_CONSTANTS := preload("res://scripts/game_constants.gd")
+const GAME_CONSTANTS := preload("res://scripts/core/game_constants.gd")
 
 class NodeEntry:
 	var id: int

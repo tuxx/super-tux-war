@@ -1,6 +1,6 @@
 [gd_scene format=4]
 
-[ext_resource type="Script" uid="uid://bwo8365ee6b7w" path="res://scripts/score_counter.gd" id="1_score_counter"]
+[ext_resource type="Script" uid="uid://bwo8365ee6b7w" path="res://scripts/ui/score_counter.gd" id="1_score_counter"]
 
 [node name="ScoreCounter" type="Control"]
 layout_mode = 3

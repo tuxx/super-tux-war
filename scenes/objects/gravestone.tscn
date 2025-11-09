@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3 uid="uid://cjy8x7h4m6k0p"]
 
 [ext_resource type="Texture2D" uid="uid://m3buqsos6dd5" path="res://assets/objects/gravestone/base-128x128.png" id="1_gravestone_texture"]
-[ext_resource type="Script" path="res://scripts/gravestone.gd" id="2_gravestone_script"]
+[ext_resource type="Script" path="res://scripts/objects/gravestone.gd" id="2_gravestone_script"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_gravestone"]
 size = Vector2(24, 30)

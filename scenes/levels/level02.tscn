@@ -1,10 +1,10 @@
 [gd_scene load_steps=6 format=4 uid="uid://d2eyggsrqd5u1"]
 
-[ext_resource type="Script" uid="uid://b0h4fj6ipj5ur" path="res://scripts/level_navigation.gd" id="1_pc803"]
+[ext_resource type="Script" uid="uid://b0h4fj6ipj5ur" path="res://scripts/levels/level_navigation.gd" id="1_pc803"]
 [ext_resource type="TileSet" uid="uid://bd71pjju517dp" path="res://assets/tilesets/smw_blocks.tres" id="2_6w44f"]
-[ext_resource type="Script" uid="uid://by6omvr8nj0ce" path="res://scripts/spawn_manager.gd" id="3_vpblt"]
+[ext_resource type="Script" uid="uid://by6omvr8nj0ce" path="res://scripts/levels/spawn_manager.gd" id="3_vpblt"]
 [ext_resource type="PackedScene" path="res://scenes/objects/spawn_point.tscn" id="4_pn630"]
-[ext_resource type="Script" uid="uid://dw1lahbxqubo2" path="res://scripts/level_info.gd" id="5_level_info"]
+[ext_resource type="Script" uid="uid://dw1lahbxqubo2" path="res://scripts/levels/level_info.gd" id="5_level_info"]
 
 [node name="TileMapLevel" type="Node2D"]
 script = ExtResource("1_pc803")

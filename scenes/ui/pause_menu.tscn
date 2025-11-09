@@ -1,6 +1,6 @@
 [gd_scene format=4]
 
-[ext_resource type="Script" path="res://scripts/pause_menu.gd" id="1_pause_menu_script"]
+[ext_resource type="Script" path="res://scripts/ui/pause_menu.gd" id="1_pause_menu_script"]
 [ext_resource type="Theme" path="res://assets/ui/menu_theme.tres" id="2_menu_theme"]
 
 [node name="PauseMenu" type="Control"]
