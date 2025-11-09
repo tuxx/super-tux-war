@@ -16,6 +16,7 @@ const BLOCKED_SPEED_THRESHOLD := 20.0
 const STOMP_HORIZONTAL_RANGE := 80.0
 const STOMP_VERTICAL_RANGE := GameConstants.TILE_SIZE * 3.0
 const STOMP_JUMP_THRESHOLD := GameConstants.TILE_SIZE * 0.75
+const SAFE_LANDING_HORIZONTAL_BUFFER := GameConstants.TILE_SIZE * 0.75
 
 var navigation: LevelNavigation
 var character: CharacterController
@@ -225,10 +226,22 @@ func _prepare_jump_edge(edge: Dictionary) -> Dictionary:
 	if absf(dx) <= ALIGNMENT_WINDOW:
 		move_dir = _signed_direction(target_node.position.x - character.global_position.x)
 		if character.is_on_floor():
-			if _is_jump_blocked_by_player(target_node):
-				return _action(move_dir, false, false)
-			active_edge = edge.duplicate(true)
-			active_edge_target_id = target_node.id
+			var jump_edge := edge
+			var landing_node := target_node
+			if _is_jump_blocked_by_player(landing_node):
+				var redirected := _find_safe_jump_edge(start_node, landing_node)
+				if redirected.is_empty():
+					return _sidestep_below_player()
+				jump_edge = redirected
+				current_plan[0] = jump_edge
+				landing_node = navigation.get_node_by_id(jump_edge["to"])
+				if landing_node == null or _is_jump_blocked_by_player(landing_node):
+					return _sidestep_below_player()
+				move_dir = _signed_direction(landing_node.position.x - character.global_position.x)
+			if landing_node == null:
+				return _sidestep_below_player()
+			active_edge = jump_edge.duplicate(true)
+			active_edge_target_id = landing_node.id
 			current_plan.remove_at(0)
 			return _action(move_dir, true, false)
 
@@ -299,7 +312,7 @@ func _is_jump_blocked_by_player(target_node: LevelNavigation.NodeEntry) -> bool:
 		return false
 	if target_node.type != LevelNavigation.NODE_SEMISOLID:
 		return false
-	if target.global_position.y <= character.global_position.y:
+	if target.global_position.y >= character.global_position.y:
 		return false
 	if absf(target.global_position.x - character.global_position.x) > GameConstants.TILE_SIZE:
 		return false
@@ -311,6 +324,51 @@ func _is_jump_blocked_by_player(target_node: LevelNavigation.NodeEntry) -> bool:
 		
 	var vertical_gap := target.global_position.y - character.global_position.y
 	return vertical_gap <= STOMP_VERTICAL_RANGE
+
+
+func _find_safe_jump_edge(start_node: LevelNavigation.NodeEntry, blocked_node: LevelNavigation.NodeEntry) -> Dictionary:
+	if navigation == null or start_node == null or blocked_node == null:
+		return {}
+
+	var adjacency_list := navigation.get_adjacency_list()
+	var edges: Array = adjacency_list.get(start_node.id, [])
+	if edges.is_empty():
+		return {}
+
+	var desired_x := blocked_node.position.x
+	if target != null:
+		desired_x = target.global_position.x
+
+	var best_edge: Dictionary = {}
+	var best_score := INF
+
+	for candidate in edges:
+		if candidate.get("type", "") != LevelNavigation.EDGE_JUMP:
+			continue
+		var landing_node := navigation.get_node_by_id(candidate["to"])
+		if landing_node == null:
+			continue
+		if landing_node.platform_id != blocked_node.platform_id:
+			continue
+		if landing_node.id == blocked_node.id:
+			continue
+		var separation := absf(landing_node.position.x - desired_x)
+		if separation < SAFE_LANDING_HORIZONTAL_BUFFER:
+			continue
+		if separation < best_score:
+			best_score = separation
+			best_edge = candidate.duplicate(true)
+
+	return best_edge
+
+
+func _sidestep_below_player() -> Dictionary:
+	var dir := 0.0
+	if target != null:
+		dir = -_signed_direction(target.global_position.x - character.global_position.x)
+	if dir == 0.0:
+		dir = 1.0 if randf() > 0.5 else -1.0
+	return _action(dir, false, false)
 
 
 func _is_ceiling_player_blocked() -> bool:

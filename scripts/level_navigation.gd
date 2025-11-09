@@ -1,7 +1,7 @@
 extends Node2D
 class_name LevelNavigation
 
-const GameConstants = preload("res://scripts/game_constants.gd")
+const GAME_CONSTANTS := preload("res://scripts/game_constants.gd")
 
 class NodeEntry:
 	var id: int
@@ -11,10 +11,10 @@ class NodeEntry:
 	var platform_id: int = -1
 	var is_edge: bool = true
 
-	func _init(node_id: int, cell: Vector2i, position: Vector2, node_type: String) -> void:
+	func _init(node_id: int, cell_coord: Vector2i, world_pos: Vector2, node_type: String) -> void:
 		id = node_id
-		self.cell = cell
-		self.position = position
+		self.cell = cell_coord
+		self.position = world_pos
 		type = node_type
 
 
@@ -177,7 +177,7 @@ func _detect_solid_border() -> void:
 
 
 func _build_nodes() -> void:
-	var tile_size := GameConstants.TILE_SIZE
+	var tile_size := GAME_CONSTANTS.TILE_SIZE
 
 	for cell_variant in _solid_cells.keys():
 		var cell: Vector2i = cell_variant
@@ -199,8 +199,8 @@ func _build_nodes() -> void:
 
 func _create_node(cell: Vector2i, node_type: String, tile_size: int) -> NodeEntry:
 	var node_id := nodes.size()
-	var position := _cell_to_world_top_center(cell, tile_size)
-	return NodeEntry.new(node_id, cell, position, node_type)
+	var node_position := _cell_to_world_top_center(cell, tile_size)
+	return NodeEntry.new(node_id, cell, node_position, node_type)
 
 
 func _cell_to_world_top_center(cell: Vector2i, tile_size: int) -> Vector2:
@@ -320,8 +320,8 @@ func _find_drop_target(start_cell: Vector2i):
 
 
 func _build_jump_edges() -> void:
-	var max_vertical_pixels := GameConstants.TILE_SIZE * max_jump_up_tiles
-	var max_horizontal_pixels := GameConstants.TILE_SIZE * max_jump_horizontal_tiles
+	var max_vertical_pixels := GAME_CONSTANTS.TILE_SIZE * max_jump_up_tiles
+	var max_horizontal_pixels := GAME_CONSTANTS.TILE_SIZE * max_jump_horizontal_tiles
 
 	for node in nodes:
 		for target in nodes:
@@ -350,7 +350,7 @@ func _build_jump_edges() -> void:
 				continue
 
 			var vx: float = horizontal_delta / time_to_target
-			if absf(vx) > GameConstants.PLAYER_MAX_RUN_SPEED + HORIZONTAL_SPEED_CUSHION:
+			if absf(vx) > GAME_CONSTANTS.PLAYER_MAX_RUN_SPEED + HORIZONTAL_SPEED_CUSHION:
 				continue
 
 			var sim_result := _simulate_jump_arc(node.position, target.position, vx, time_to_target)
@@ -372,8 +372,8 @@ func _is_jump_pair_allowed(node: NodeEntry, target: NodeEntry) -> bool:
 
 
 func _solve_jump_time(start_y: float, target_y: float) -> float:
-	var a := 0.5 * GameConstants.GRAVITY
-	var b := GameConstants.JUMP_VELOCITY
+	var a := 0.5 * GAME_CONSTANTS.GRAVITY
+	var b := GAME_CONSTANTS.JUMP_VELOCITY
 	var c := start_y - target_y
 	var discriminant := b * b - 4.0 * a * c
 
@@ -402,16 +402,16 @@ func _simulate_jump_arc(start_pos: Vector2, target_pos: Vector2, vx: float, tota
 		time += SIMULATION_STEP
 		var pos := Vector2(
 			start_pos.x + vx * time,
-			start_pos.y + GameConstants.JUMP_VELOCITY * time + 0.5 * GameConstants.GRAVITY * time * time
+			start_pos.y + GAME_CONSTANTS.JUMP_VELOCITY * time + 0.5 * GAME_CONSTANTS.GRAVITY * time * time
 		)
 		points.append(pos)
 
 		if _collides_with_solid(pos):
 			return {"valid": false}
 
-		var vertical_velocity := GameConstants.JUMP_VELOCITY + GameConstants.GRAVITY * time
+		var vertical_velocity := GAME_CONSTANTS.JUMP_VELOCITY + GAME_CONSTANTS.GRAVITY * time
 		if vertical_velocity > 0.0:
-			if absf(pos.x - target_pos.x) <= GameConstants.TILE_SIZE * 0.5 and absf(pos.y - target_pos.y) <= LANDING_EPSILON:
+			if absf(pos.x - target_pos.x) <= GAME_CONSTANTS.TILE_SIZE * 0.5 and absf(pos.y - target_pos.y) <= LANDING_EPSILON:
 				return {"valid": true, "points": points}
 
 	return {"valid": false}
@@ -435,7 +435,7 @@ func _collides_with_solid(pos: Vector2) -> bool:
 
 
 func _world_to_cell(world_pos: Vector2) -> Vector2i:
-	var tile_size := GameConstants.TILE_SIZE
+	var tile_size := GAME_CONSTANTS.TILE_SIZE
 	return Vector2i(
 		floor(world_pos.x / tile_size),
 		floor(world_pos.y / tile_size)
@@ -511,7 +511,7 @@ func get_nodes_for_platform(platform_id: int) -> Array:
 	return (platforms[platform_id] as PlatformEntry).nodes
 
 
-func find_closest_node(world_pos: Vector2, vertical_tolerance: float = GameConstants.TILE_SIZE * 4.0) -> NodeEntry:
+func find_closest_node(world_pos: Vector2, vertical_tolerance: float = GAME_CONSTANTS.TILE_SIZE * 4.0) -> NodeEntry:
 	var best: NodeEntry = null
 	var best_score := INF
 	for node in nodes:
@@ -527,7 +527,7 @@ func find_closest_node(world_pos: Vector2, vertical_tolerance: float = GameConst
 
 
 func get_tile_size() -> int:
-	return GameConstants.TILE_SIZE
+	return GAME_CONSTANTS.TILE_SIZE
 
 
 func _draw() -> void:
@@ -555,9 +555,9 @@ func _draw_platforms() -> void:
 		var last_node: NodeEntry = nodes_in_platform[nodes_in_platform.size() - 1]
 
 		var rect := Rect2(
-			Vector2(first_node.position.x - GameConstants.TILE_SIZE * 0.5, first_node.position.y),
+			Vector2(first_node.position.x - GAME_CONSTANTS.TILE_SIZE * 0.5, first_node.position.y),
 			Vector2(
-				(last_node.cell.x - first_node.cell.x + 1) * GameConstants.TILE_SIZE,
+				(last_node.cell.x - first_node.cell.x + 1) * GAME_CONSTANTS.TILE_SIZE,
 				3.0
 			)
 		)
