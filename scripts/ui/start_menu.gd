@@ -266,12 +266,6 @@ func _populate_levels() -> void:
 			dir.list_dir_end()
 		_log("DirAccess iteration -> %d entries" % files.size())
 	
-	if files.is_empty():
-		for n in range(1, 21):
-			var candidate := "level%02d.tscn" % n
-			files.append(candidate)
-		_log("Probed level names -> %d candidates" % files.size())
-	
 	files.sort()
 	for file_name in files:
 		var lower := String(file_name).to_lower()
@@ -288,13 +282,7 @@ func _populate_levels() -> void:
 		if exists:
 			_level_paths.append(level_path)
 	
-	if _level_paths.size() == 0:
-		_log("No filtered .tscn files. Falling back to probing level01..level20.")
-		for n in range(1, 21):
-			var candidate_path := "%s/level%02d.tscn" % [dir_path, n]
-			_level_paths.append(candidate_path)
-	
-	_log("Filtered level paths -> %d" % _level_paths.size())
+	_log("Found %d actual level(s)" % _level_paths.size())
 	
 	if _level_paths.size() > 0:
 		_selected_level_index = 0

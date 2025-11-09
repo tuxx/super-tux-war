@@ -75,12 +75,12 @@ func _create_score_row(entry: Dictionary) -> HBoxContainer:
 	name_label.add_theme_font_size_override("font_size", 16)
 	row.add_child(name_label)
 	
-	# Player indicator (checkmark or X)
+	# Player indicator (Player or CPU text)
 	var player_label := Label.new()
 	player_label.custom_minimum_size = Vector2(100, 0)
-	player_label.text = "✓" if entry.is_player else "✗"
+	player_label.text = "Player" if entry.is_player else "CPU"
 	player_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	player_label.add_theme_font_size_override("font_size", 20)
+	player_label.add_theme_font_size_override("font_size", 16)
 	player_label.add_theme_color_override("font_color", Color.GREEN if entry.is_player else Color.RED)
 	row.add_child(player_label)
 	
