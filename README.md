@@ -41,6 +41,9 @@ The game follows Super Mario War conventions for tight, responsive platformer co
 **Combat**
 - Stomp enemies by landing on their head from above
 - Respawn after 2 seconds
+- On death, a gravestone spawns at the character’s position and falls to the ground
+  - Gravestones collide only with the world and despawn automatically after 10 seconds
+  - Players and NPCs do not collide with gravestones
 
 ### Level Design (32×32 Tile Grid)
 
@@ -68,28 +71,6 @@ All levels use a strict **32×32 pixel tile grid** following Super Mario War des
 - **Death (floor)**: Hazard tiles that kill on contact from above
 - **Death (ceiling)**: Hazard tiles that kill on contact from below
 
-### AI Behavior (SMW-Style Reactive Logic)
-
-NPCs use reactive heuristics instead of pathfinding, running at ~15 Hz (every 4 frames):
-
-**Target Selection**
-- Choose nearest player/goal/threat using distance
-- Respect world wrap if enabled
-
-**Movement Heuristics**
-- Move toward target by default
-- Run away if target is invincible or a threat
-- Jump when blocked by walls (velocity ≈ 0 while moving)
-
-**Vertical Decisions**
-- Jump if target is above and horizontally aligned (±45 px window)
-- Drop through semisolid platforms if target is below
-- Avoid jumping into ceiling hazards (death_bottom tiles)
-
-**Hazard Avoidance**
-- Scan downward under feet for death_top tiles
-- If pit/spike detected before solid ground, move away and jump
-
 ### Goals (may change)
 - **Multiplayer**: Local first; P2P networking later; dedicated servers maybe after that
 - **Worlds & levels**: Multiple worlds with levels you can play solo vs NPCs or versus other players
@@ -109,7 +90,7 @@ We will first focus on core gameplay foundations: characters, items, levels, and
 - ✅ Drop-through platform mechanic
 - ✅ Head stomp combat system
 - ✅ Character respawn system
-- 🚧 NPC AI (planned)
+- ✅ NPC AI
 - 🚧 Items and powerups (planned)
 - 🚧 Multiplayer (planned)
 
@@ -143,7 +124,7 @@ We will first focus on core gameplay foundations: characters, items, levels, and
 
 **Animations**
 - Use sprite sheets with consistent frame sizes
-- Recommended animations: idle, run, jump, death
+- Recommended animations: idle, run, jump
 - Frame rate: typically 4-8 fps for idle, 8 fps for run
 
 **TileSet Configuration**
@@ -151,14 +132,12 @@ We will first focus on core gameplay foundations: characters, items, levels, and
 - Set custom data flags: `solid`, `semisolid`, `ice`, `death_top`, `death_bottom`
 - Configure physics layers: layer 0 for solid, layer 1 for semisolid
 
-
 ### Contributing
 - Workflow: fork → feature branch → PR; discuss larger changes in issues first.
 - Language/style: GDScript; keep changes focused and PRs small where possible.
 - Assets: submit original or properly licensed assets; include required attributions; follow the sizes and naming above.
 - License: MIT (code and assets). By contributing, you agree to license your contributions under MIT.
 - Local testing: run with Godot 4.5.1 (see above).
-
 
 ### Acknowledgements
 - Inspired by community-made arena platformers like Super Mario War.
