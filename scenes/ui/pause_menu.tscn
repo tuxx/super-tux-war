@@ -56,7 +56,7 @@ theme_override_font_sizes/font_size = 26
 
 [node name="NewGameButton" type="Button" parent="CenterContainer/PanelContainer/VBox/Buttons"]
 layout_mode = 2
-text = "New Game"
+text = "Exit to main menu"
 size_flags_horizontal = 4
 custom_minimum_size = Vector2(0, 52)
 theme_override_font_sizes/font_size = 26

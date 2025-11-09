@@ -15,14 +15,18 @@ run/main_scene="res://scenes/ui/start_menu.tscn"
 config/features=PackedStringArray("4.5", "Forward Plus")
 config/icon="res://icon.svg"
 
+[autoload]
+
+UIManager="*res://scripts/ui_manager.gd"
+InputManager="*res://scripts/input_manager.gd"
+
 [display]
 
 window/size/viewport_width=1280
 window/size/viewport_height=720
 window/size/window_width_override=1280
 window/size/window_height_override=720
-window/stretch/mode="canvas_items"
-window/stretch/aspect="expand"
+window/stretch/mode="viewport"
 
 [input]
 
@@ -54,8 +58,3 @@ move_down={
 [rendering]
 
 2d/snap/snap_2d_transforms_to_pixel=true
-
-[autoload]
-
-UIManager="*res://scripts/ui_manager.gd"
-InputManager="*res://scripts/input_manager.gd"

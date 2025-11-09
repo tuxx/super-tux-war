@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://b8n5x40uc2bsb"]
+[gd_scene load_steps=4 format=3 uid="uid://b8n5x40uc2bsb"]
 
 [ext_resource type="Script" uid="uid://da5q4e6jjjhuq" path="res://scripts/start_menu.gd" id="1_start_menu_script"]
 [ext_resource type="Theme" path="res://assets/ui/menu_theme.tres" id="2_menu_theme"]
+[ext_resource type="Theme" path="res://assets/ui/level_card_theme.tres" id="3_level_card_theme"]
 
 [node name="StartMenu" type="Control"]
 layout_mode = 3
@@ -22,7 +23,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.08, 0.08, 0.1, 1)
 
-[node name="CenterContainer" type="CenterContainer" parent="."]
+[node name="PanelContainer" type="PanelContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -30,62 +31,174 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="PanelContainer" type="PanelContainer" parent="CenterContainer"]
+[node name="VBox" type="VBoxContainer" parent="PanelContainer"]
 layout_mode = 2
-
-[node name="VBox" type="VBoxContainer" parent="CenterContainer/PanelContainer"]
-custom_minimum_size = Vector2(420, 0)
-layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
 theme_override_constants/separation = 16
 
-[node name="Title" type="Label" parent="CenterContainer/PanelContainer/VBox"]
+[node name="Title" type="Label" parent="PanelContainer/VBox"]
 custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 theme_override_font_sizes/font_size = 40
 text = "Super Tux War"
 horizontal_alignment = 1
 
-[node name="Separator1" type="HSeparator" parent="CenterContainer/PanelContainer/VBox"]
+[node name="Separator1" type="HSeparator" parent="PanelContainer/VBox"]
 layout_mode = 2
 
-[node name="Buttons" type="VBoxContainer" parent="CenterContainer/PanelContainer/VBox"]
+[node name="Buttons" type="VBoxContainer" parent="PanelContainer/VBox"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="NewGameButton" type="Button" parent="CenterContainer/PanelContainer/VBox/Buttons"]
+[node name="NewGameButton" type="Button" parent="PanelContainer/VBox/Buttons"]
 custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 26
 text = "New Game"
 
-[node name="Legend" type="VBoxContainer" parent="CenterContainer/PanelContainer/VBox"]
+[node name="SeparatorLevel" type="HSeparator" parent="PanelContainer/VBox"]
+layout_mode = 2
+
+[node name="LevelHeader" type="Label" parent="PanelContainer/VBox"]
+layout_mode = 2
+text = "Select a Level"
+horizontal_alignment = 1
+size_flags_horizontal = 4
+modulate = Color(1, 1, 1, 0.85)
+
+[node name="LevelScroll" type="ScrollContainer" parent="PanelContainer/VBox"]
+custom_minimum_size = Vector2(0, 220)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="CenterContainer" type="CenterContainer" parent="PanelContainer/VBox/LevelScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="LevelGrid" type="GridContainer" parent="PanelContainer/VBox/LevelScroll/CenterContainer"]
+layout_mode = 2
+columns = 2
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 12
+
+[node name="LevelCard1" type="PanelContainer" parent="PanelContainer/VBox/LevelScroll/CenterContainer/LevelGrid"]
+layout_mode = 2
+size_flags_horizontal = 4
+custom_minimum_size = Vector2(200, 160)
+theme = ExtResource("3_level_card_theme")
+
+[node name="Border" type="ReferenceRect" parent="PanelContainer/VBox/LevelScroll/CenterContainer/LevelGrid/LevelCard1"]
+visible = false
+layout_mode = 2
+border_color = Color(1, 1, 0, 1)
+border_width = 3.0
+z_index = 10
+
+[node name="VBox" type="VBoxContainer" parent="PanelContainer/VBox/LevelScroll/CenterContainer/LevelGrid/LevelCard1"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Button" type="Button" parent="PanelContainer/VBox/LevelScroll/CenterContainer/LevelGrid/LevelCard1"]
+layout_mode = 2
+flat = true
+mouse_filter = 0
+focus_mode = 2
+theme = ExtResource("3_level_card_theme")
+
+[node name="Thumb" type="TextureRect" parent="PanelContainer/VBox/LevelScroll/CenterContainer/LevelGrid/LevelCard1/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(180, 120)
+size_flags_horizontal = 4
+stretch_mode = 5
+mouse_filter = 2
+
+[node name="Name" type="Label" parent="PanelContainer/VBox/LevelScroll/CenterContainer/LevelGrid/LevelCard1/VBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+horizontal_alignment = 1
+text = "Level 01"
+mouse_filter = 2
+
+[node name="LevelCard2" type="PanelContainer" parent="PanelContainer/VBox/LevelScroll/CenterContainer/LevelGrid"]
+layout_mode = 2
+size_flags_horizontal = 4
+custom_minimum_size = Vector2(200, 160)
+theme = ExtResource("3_level_card_theme")
+
+[node name="Border" type="ReferenceRect" parent="PanelContainer/VBox/LevelScroll/CenterContainer/LevelGrid/LevelCard2"]
+visible = false
+layout_mode = 2
+border_color = Color(1, 1, 0, 1)
+border_width = 3.0
+z_index = 10
+
+[node name="VBox" type="VBoxContainer" parent="PanelContainer/VBox/LevelScroll/CenterContainer/LevelGrid/LevelCard2"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Button" type="Button" parent="PanelContainer/VBox/LevelScroll/CenterContainer/LevelGrid/LevelCard2"]
+layout_mode = 2
+flat = true
+mouse_filter = 0
+focus_mode = 2
+theme = ExtResource("3_level_card_theme")
+
+[node name="Thumb" type="TextureRect" parent="PanelContainer/VBox/LevelScroll/CenterContainer/LevelGrid/LevelCard2/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(180, 120)
+size_flags_horizontal = 4
+stretch_mode = 5
+mouse_filter = 2
+
+[node name="Name" type="Label" parent="PanelContainer/VBox/LevelScroll/CenterContainer/LevelGrid/LevelCard2/VBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+horizontal_alignment = 1
+text = "Level 02"
+mouse_filter = 2
+
+[node name="Legend" type="VBoxContainer" parent="PanelContainer/VBox"]
 modulate = Color(1, 1, 1, 0.65)
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="LegendTitle" type="Label" parent="CenterContainer/PanelContainer/VBox/Legend"]
+[node name="LegendTitle" type="Label" parent="PanelContainer/VBox/Legend"]
 modulate = Color(1, 1, 1, 0.75)
 layout_mode = 2
 text = "Controls"
 horizontal_alignment = 1
+size_flags_horizontal = 4
 
-[node name="LegendMove" type="Label" parent="CenterContainer/PanelContainer/VBox/Legend"]
+[node name="LegendMove" type="Label" parent="PanelContainer/VBox/Legend"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "Move: A/D or Left/Right"
+horizontal_alignment = 1
+size_flags_horizontal = 4
 
-[node name="LegendPause" type="Label" parent="CenterContainer/PanelContainer/VBox/Legend"]
+[node name="LegendPause" type="Label" parent="PanelContainer/VBox/Legend"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "Pause: Esc"
+horizontal_alignment = 1
+size_flags_horizontal = 4
 
-[node name="LegendJump" type="Label" parent="CenterContainer/PanelContainer/VBox/Legend"]
+[node name="LegendJump" type="Label" parent="PanelContainer/VBox/Legend"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "Jump: W or Space"
+horizontal_alignment = 1
+size_flags_horizontal = 4
 
-[node name="LegendDown" type="Label" parent="CenterContainer/PanelContainer/VBox/Legend"]
+[node name="LegendDown" type="Label" parent="PanelContainer/VBox/Legend"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "Down: S or Down Arrow"
+horizontal_alignment = 1
+size_flags_horizontal = 4

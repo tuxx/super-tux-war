@@ -29,9 +29,9 @@ func _on_resume_pressed() -> void:
 
 
 func _on_new_game_pressed() -> void:
-	# Unpause and restart the level
+	# Unpause and return to the main menu
 	get_tree().paused = false
-	get_tree().change_scene_to_file("res://scenes/levels/tile_map.tscn")
+	get_tree().change_scene_to_file("res://scenes/ui/start_menu.tscn")
 
 
 func _on_visibility_changed() -> void:

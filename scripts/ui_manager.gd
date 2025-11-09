@@ -44,13 +44,22 @@ func _ensure_hud(root: Node) -> void:
 func _ensure_dev_menu(root: Node) -> void:
 	if root == null:
 		return
-	# Only in debug builds
+	# Only in debug builds and only in level scenes (not menus)
 	if not OS.is_debug_build():
 		# Clean up if present from editor
 		var existing_release := root.get_node_or_null("DevMenu")
 		if existing_release:
 			existing_release.queue_free()
 		return
+	
+	# Don't show dev menu in UI scenes (menus)
+	var scene_path := root.scene_file_path
+	if scene_path.begins_with("res://scenes/ui/"):
+		var existing := root.get_node_or_null("DevMenu")
+		if existing:
+			existing.queue_free()
+		return
+	
 	if root.get_node_or_null("DevMenu") != null:
 		return
 	var dev := DEV_MENU_SCENE.instantiate()
@@ -72,6 +81,11 @@ func _ensure_pause_menu() -> void:
 
 
 func _toggle_pause() -> void:
+	# Don't show pause menu in the start menu scene
+	var current_scene := get_tree().current_scene
+	if current_scene and current_scene.scene_file_path == "res://scenes/ui/start_menu.tscn":
+		return
+	
 	if get_tree().paused:
 		get_tree().paused = false
 		if is_instance_valid(_pause_menu):

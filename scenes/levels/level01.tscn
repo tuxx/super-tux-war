@@ -1,8 +1,9 @@
-[gd_scene load_steps=5 format=4 uid="uid://brgkt17ijgavn"]
+[gd_scene load_steps=6 format=4 uid="uid://cb1b066oisbwk"]
 
 [ext_resource type="TileSet" uid="uid://bd71pjju517dp" path="res://assets/tilesets/smw_blocks.tres" id="1_tileset"]
 [ext_resource type="Script" uid="uid://b0h4fj6ipj5ur" path="res://scripts/level_navigation.gd" id="2_level_navigation"]
 [ext_resource type="PackedScene" path="res://scenes/objects/spawn_point.tscn" id="4_5oppj"]
+[ext_resource type="Script" uid="uid://dw1lahbxqubo2" path="res://scripts/level_info.gd" id="5_level_info"]
 [ext_resource type="Script" uid="uid://by6omvr8nj0ce" path="res://scripts/spawn_manager.gd" id="9_spawn_manager"]
 
 [node name="TileMapLevel" type="Node2D"]
@@ -48,3 +49,7 @@ position = Vector2(933, 345)
 
 [node name="SpawnPoint8" parent="SpawnManager" instance=ExtResource("4_5oppj")]
 position = Vector2(736, 127)
+
+[node name="LevelInfo" type="Node" parent="."]
+script = ExtResource("5_level_info")
+level_name = "Tux's Castle"

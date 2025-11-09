@@ -105,7 +105,6 @@ We will first focus on core gameplay foundations: characters, items, levels, and
   ```bash
   godot4 --path .
   ```
-- Main scene: `scenes/levels/tile_map.tscn`
 
 ### Creating Assets
 
