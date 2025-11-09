@@ -101,6 +101,7 @@ func _check_character_collisions(previous_velocity_y: float) -> void:
 			if hit_their_top:
 				# Successful stomp - they die, we bounce
 				other_character.despawn(self)
+				AudioManager.play_stomp(global_position)
 				velocity.y = physics.jump_velocity * 0.5
 			elif hit_their_bottom:
 				# Hit their bottom from below - we die and credit them
