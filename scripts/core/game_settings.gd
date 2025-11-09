@@ -7,6 +7,7 @@ var cpu_count: int = 1  # Number of CPU opponents (1-7)
 var player_character: String = "tux"  # Player's selected character
 var cpu_character: String = "beasty"  # CPU's selected character
 var kills_to_win: int = 10  # Number of kills needed to win
+var selected_level_index: int = 0  # Currently selected level in main menu
 
 const MIN_CPU_COUNT: int = 1
 const MAX_CPU_COUNT: int = 7
@@ -64,4 +65,10 @@ func increase_kills_to_win() -> void:
 
 func decrease_kills_to_win() -> void:
 	set_kills_to_win(kills_to_win - 1)
+
+func set_selected_level_index(index: int) -> void:
+	selected_level_index = max(0, index)
+
+func get_selected_level_index() -> int:
+	return selected_level_index
 

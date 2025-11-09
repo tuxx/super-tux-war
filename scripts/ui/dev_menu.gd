@@ -5,6 +5,14 @@ extends Control
 var desired_draw_graph := false
 var desired_draw_jump := false
 
+# Performance tracking
+var frame_times: Array[float] = []
+const MAX_FRAME_SAMPLES := 100
+var perf_graph: Control = null
+var mft_label: Label = null
+var hft_label: Label = null
+var highest_frame_time_ever: float = 0.0  # All-time peak, never decreases
+
 func _ready() -> void:
 	# Only show in debug builds (disabled in release exports)
 	if not OS.is_debug_build():
@@ -12,6 +20,12 @@ func _ready() -> void:
 		return
 	# Ensure the dev menu still processes input/UI when the game is paused
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	# Ensure dev menu appears above everything (including game over screen)
+	z_index = 1000
+	
+	# Reset stats when scene changes
+	reset_performance_stats()
+	
 	# Listen to centralized input toggles
 	InputManager.dev_menu_toggled.connect(func(): visible = not visible)
 	InputManager.nav_graph_toggled.connect(func():
@@ -27,10 +41,13 @@ func _ready() -> void:
 	# Full-rect root to let containers position panel at top-right with margins
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 
+	# Use tile-based padding: 1.5 tiles
+	var tile_padding := int(GameConstants.TILE_SIZE * 1.5)
+	
 	var margin: MarginContainer = MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-	margin.add_theme_constant_override("margin_top", 10)
-	margin.add_theme_constant_override("margin_right", 10)
+	margin.add_theme_constant_override("margin_top", tile_padding)
+	margin.add_theme_constant_override("margin_right", tile_padding)
 	add_child(margin)
 
 	var hbox: HBoxContainer = HBoxContainer.new()
@@ -65,6 +82,31 @@ func _ready() -> void:
 	var hint_jump: Label = Label.new()
 	hint_jump.text = "F12: Toggle Jump Arcs"
 	vbox.add_child(hint_jump)
+	
+	vbox.add_child(_make_separator())
+	
+	# Performance graph
+	perf_graph = Control.new()
+	perf_graph.custom_minimum_size = Vector2(200, 60)
+	perf_graph.draw.connect(_draw_performance_graph)
+	vbox.add_child(perf_graph)
+	
+	var perf_label: Label = Label.new()
+	perf_label.text = "Frame Time (ms)"
+	perf_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(perf_label)
+	
+	# Median frame time label
+	mft_label = Label.new()
+	mft_label.text = "MFT: 0.0 ms"
+	mft_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(mft_label)
+	
+	# Highest frame time label
+	hft_label = Label.new()
+	hft_label.text = "HFT: 0.0 ms"
+	hft_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(hft_label)
 
 	var nav := _get_navigation()
 	if nav:
@@ -95,10 +137,21 @@ func _get_navigation() -> LevelNavigation:
 	return null
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if not OS.is_debug_build():
 		return
 	_apply_toggle_states()
+	
+	# Track frame time in milliseconds
+	var frame_ms := delta * 1000.0
+	frame_times.append(frame_ms)
+	if frame_times.size() > MAX_FRAME_SAMPLES:
+		frame_times.pop_front()
+	
+	# Update performance graph and stats
+	if perf_graph and visible:
+		perf_graph.queue_redraw()
+		_update_frame_stats()
 
 
 func _apply_toggle_states() -> void:
@@ -118,3 +171,99 @@ func _toggle_debug_pause() -> void:
 	# Toggle game pause without showing any menu (for debugging)
 	get_tree().paused = not get_tree().paused
 	print("[Dev] Debug pause: ", "PAUSED" if get_tree().paused else "UNPAUSED")
+
+
+func reset_performance_stats() -> void:
+	# Reset frame time statistics (called when level loads/restarts)
+	frame_times.clear()
+	highest_frame_time_ever = 0.0
+	if mft_label:
+		mft_label.text = "MFT: 0.0 ms"
+	if hft_label:
+		hft_label.text = "HFT: 0.0 ms"
+
+
+func _update_frame_stats() -> void:
+	if frame_times.is_empty():
+		return
+	
+	# Calculate median frame time
+	var sorted_times := frame_times.duplicate()
+	sorted_times.sort()
+	var median_ms: float = 0.0
+	var mid := sorted_times.size() / 2
+	if sorted_times.size() % 2 == 0:
+		median_ms = (sorted_times[mid - 1] + sorted_times[mid]) / 2.0
+	else:
+		median_ms = sorted_times[mid]
+	
+	# Track all-time highest frame time (never decreases)
+	var current_frame_ms: float = frame_times[frame_times.size() - 1]
+	if current_frame_ms > highest_frame_time_ever:
+		highest_frame_time_ever = current_frame_ms
+	
+	# Update labels
+	if mft_label:
+		mft_label.text = "MFT: %.1f ms" % median_ms
+	if hft_label:
+		hft_label.text = "HFT: %.1f ms" % highest_frame_time_ever
+
+
+func _draw_performance_graph() -> void:
+	if not perf_graph or frame_times.is_empty():
+		return
+	
+	var graph_size := perf_graph.get_size()
+	var width := graph_size.x
+	var height := graph_size.y
+	
+	# Draw background
+	perf_graph.draw_rect(Rect2(Vector2.ZERO, graph_size), Color(0, 0, 0, 0.5))
+	
+	# Calculate scaling
+	var max_ms := 33.33  # Target 30fps as max (spikes beyond this still visible)
+	for ms in frame_times:
+		if ms > max_ms:
+			max_ms = ms
+	
+	# Draw reference lines
+	# 60fps = 16.67ms
+	var fps60_y := height - (16.67 / max_ms) * height
+	perf_graph.draw_line(Vector2(0, fps60_y), Vector2(width, fps60_y), Color(0, 1, 0, 0.3), 1.0)
+	
+	# 30fps = 33.33ms
+	var fps30_y := height - (33.33 / max_ms) * height
+	perf_graph.draw_line(Vector2(0, fps30_y), Vector2(width, fps30_y), Color(1, 1, 0, 0.3), 1.0)
+	
+	# Draw the graph line
+	if frame_times.size() < 2:
+		return
+	
+	var samples := frame_times.size()
+	var x_step := width / float(samples - 1)
+	
+	for i in range(samples - 1):
+		var x1 := i * x_step
+		var x2 := (i + 1) * x_step
+		
+		var y1 := height - (frame_times[i] / max_ms) * height
+		var y2 := height - (frame_times[i + 1] / max_ms) * height
+		
+		# Clamp to visible area
+		y1 = clampf(y1, 0, height)
+		y2 = clampf(y2, 0, height)
+		
+		# Color based on performance
+		var color := Color.GREEN
+		if frame_times[i + 1] > 33.33:
+			color = Color.RED
+		elif frame_times[i + 1] > 16.67:
+			color = Color.YELLOW
+		
+		perf_graph.draw_line(Vector2(x1, y1), Vector2(x2, y2), color, 2.0)
+	
+	# Draw current FPS text
+	var current_ms: float = frame_times[frame_times.size() - 1]
+	var current_fps: float = 1000.0 / current_ms if current_ms > 0.0 else 0.0
+	var fps_text := "%.1f fps (%.1f ms)" % [current_fps, current_ms]
+	perf_graph.draw_string(ThemeDB.fallback_font, Vector2(5, 12), fps_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color.WHITE)

@@ -45,7 +45,7 @@ position = Vector2(1043, 382)
 position = Vector2(174, 375)
 
 [node name="SpawnPoint7" parent="SpawnManager" instance=ExtResource("4_pn630")]
-position = Vector2(627, 350)
+position = Vector2(402, 262)
 
 [node name="SpawnPoint8" parent="SpawnManager" instance=ExtResource("4_pn630")]
 position = Vector2(627, 447)

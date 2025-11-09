@@ -166,6 +166,7 @@ func _on_prev_level_pressed() -> void:
 	_selected_level_index -= 1
 	if _selected_level_index < 0:
 		_selected_level_index = _level_paths.size() - 1
+	GameSettings.set_selected_level_index(_selected_level_index)
 	_update_preview_displays()
 	_update_level_navigation_buttons()
 
@@ -175,6 +176,7 @@ func _on_next_level_pressed() -> void:
 	_selected_level_index += 1
 	if _selected_level_index >= _level_paths.size():
 		_selected_level_index = 0
+	GameSettings.set_selected_level_index(_selected_level_index)
 	_update_preview_displays()
 	_update_level_navigation_buttons()
 
@@ -270,7 +272,12 @@ func _populate_levels() -> void:
 	_log("Found %d level(s) with thumbnails" % _level_paths.size())
 	
 	if _level_paths.size() > 0:
-		_selected_level_index = 0
+		# Restore previously selected level index from GameSettings
+		_selected_level_index = GameSettings.get_selected_level_index()
+		# Clamp to valid range
+		if _selected_level_index >= _level_paths.size():
+			_selected_level_index = 0
+			GameSettings.set_selected_level_index(_selected_level_index)
 	
 	_update_level_navigation_buttons()
 
@@ -335,6 +342,7 @@ func _create_level_card(index: int, level_path: String) -> PanelContainer:
 
 func _on_level_card_selected(index: int) -> void:
 	_selected_level_index = index
+	GameSettings.set_selected_level_index(_selected_level_index)
 	_level_select_popup.hide()
 	_update_preview_displays()
 
