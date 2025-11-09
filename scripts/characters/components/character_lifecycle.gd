@@ -86,9 +86,6 @@ func respawn() -> void:
 	character.global_position = spawn_position
 	character.velocity = Vector2.ZERO
 	
-	# Play spawn sound
-	AudioManager.play_spawn(character.global_position)
-	
 	# Restore collision shape
 	if shape_alive:
 		shape_alive.disabled = false

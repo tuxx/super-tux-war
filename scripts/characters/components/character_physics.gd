@@ -144,7 +144,6 @@ func _apply_gravity(delta: float) -> void:
 
 func _perform_jump() -> void:
 	character.velocity.y = jump_velocity
-	AudioManager.play_jump(character.global_position)
 
 func _wrap_after_motion() -> void:
 	if not wrap_enabled:
