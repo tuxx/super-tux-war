@@ -19,8 +19,13 @@ How to contribute code, assets, documentation, and more. Includes list of needed
 ### [Roadmap](ROADMAP.md)
 Feature roadmap and development priorities (multiplayer, sound system, game modes, etc.).
 
-### Character System *(coming soon)*
-How to add new characters, animations, and customize behavior.
+### [Character System](character-system/README.md)
+Component-based character architecture for players and NPCs.
+
+- **[Character System Overview](character-system/README.md)** - Architecture and components
+- **[Character Controller](character-system/character-controller.md)** - Main controller coordination
+- **[Physics Component](character-system/physics-component.md)** - Movement, jumping, gravity
+- **[Lifecycle Component](character-system/lifecycle-component.md)** - Death, respawn, spawn protection
 
 ### Core Systems *(coming soon)*
 Deep dive into event bus, game state, input management, and more.
