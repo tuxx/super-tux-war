@@ -1,10 +1,9 @@
-[gd_scene load_steps=9 format=4 uid="uid://brgkt17ijgavn"]
+[gd_scene load_steps=7 format=4 uid="uid://brgkt17ijgavn"]
 
 [ext_resource type="TileSet" uid="uid://bd71pjju517dp" path="res://assets/tilesets/smw_blocks.tres" id="1_tileset"]
 [ext_resource type="Script" uid="uid://b0h4fj6ipj5ur" path="res://scripts/level_navigation.gd" id="2_level_navigation"]
 [ext_resource type="PackedScene" path="res://scenes/objects/spawn_point.tscn" id="4_5oppj"]
 [ext_resource type="Script" uid="uid://bi6lx7ircvkf" path="res://scripts/dev_menu.gd" id="5_dev_menu"]
-[ext_resource type="Script" uid="uid://bwo8365ee6b7w" path="res://scripts/score_counter.gd" id="6_score_counter"]
 [ext_resource type="Script" uid="uid://cuuu6bjbjpxpt" path="res://scripts/pause_manager.gd" id="8_pause_manager"]
 [ext_resource type="Script" uid="uid://by6omvr8nj0ce" path="res://scripts/spawn_manager.gd" id="9_spawn_manager"]
 
@@ -38,38 +37,24 @@ position = Vector2(48, 664)
 [node name="SpawnPoint4" parent="SpawnManager" instance=ExtResource("4_5oppj")]
 position = Vector2(1234, 665)
 
+[node name="SpawnPoint5" parent="SpawnManager" instance=ExtResource("4_5oppj")]
+position = Vector2(402, 417)
+
+[node name="SpawnPoint6" parent="SpawnManager" instance=ExtResource("4_5oppj")]
+position = Vector2(595, 355)
+
+[node name="SpawnPoint7" parent="SpawnManager" instance=ExtResource("4_5oppj")]
+position = Vector2(933, 345)
+
+[node name="SpawnPoint8" parent="SpawnManager" instance=ExtResource("4_5oppj")]
+position = Vector2(736, 127)
+
 [node name="DevMenu" type="Control" parent="."]
 layout_mode = 3
 anchors_preset = 0
 script = ExtResource("5_dev_menu")
 
 [node name="HUD" type="CanvasLayer" parent="."]
-
-[node name="ScoreCounter" type="Control" parent="HUD"]
-layout_mode = 3
-anchors_preset = 0
-offset_left = 626.0
-offset_top = 46.0
-offset_right = 626.0
-offset_bottom = 106.0
-mouse_filter = 2
-script = ExtResource("6_score_counter")
-
-[node name="Entries" type="HBoxContainer" parent="HUD/ScoreCounter"]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 8.0
-offset_top = 8.0
-offset_right = -8.0
-offset_bottom = -8.0
-grow_horizontal = 2
-grow_vertical = 2
-size_flags_horizontal = 3
-mouse_filter = 2
-theme_override_constants/separation = 12
 
 [node name="PauseManager" type="Node" parent="."]
 script = ExtResource("8_pause_manager")

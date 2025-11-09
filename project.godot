@@ -54,3 +54,7 @@ move_down={
 [rendering]
 
 2d/snap/snap_2d_transforms_to_pixel=true
+
+[autoload]
+
+UIManager="*res://scripts/ui_manager.gd"
