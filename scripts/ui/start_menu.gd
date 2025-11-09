@@ -1,7 +1,6 @@
 extends Control
 
 # Preload popup scenes
-const LEVEL_SELECT_POPUP_SCENE := preload("res://scenes/ui/level_select_popup.tscn")
 const CHARACTER_SELECT_POPUP_SCENE := preload("res://scenes/ui/character_select_popup.tscn")
 const CPU_SELECT_POPUP_SCENE := preload("res://scenes/ui/cpu_select_popup.tscn")
 
@@ -28,7 +27,6 @@ const CPU_SELECT_POPUP_SCENE := preload("res://scenes/ui/cpu_select_popup.tscn")
 @onready var _cpu_preview: TextureRect = $"%CPUPreview"
 
 # Popup instances
-var _level_select_popup: AcceptDialog = null
 var _character_select_popup: AcceptDialog = null
 var _cpu_select_popup: AcceptDialog = null
 
@@ -81,10 +79,6 @@ func _ready() -> void:
 	call_deferred("_update_kills_display")
 
 func _setup_popups() -> void:
-	# Instantiate level select popup
-	_level_select_popup = LEVEL_SELECT_POPUP_SCENE.instantiate()
-	add_child(_level_select_popup)
-	
 	# Instantiate character select popup
 	_character_select_popup = CHARACTER_SELECT_POPUP_SCENE.instantiate()
 	add_child(_character_select_popup)
@@ -267,71 +261,6 @@ func _populate_levels() -> void:
 			GameSettings.set_selected_level_index(_selected_level_index)
 	
 	_update_level_navigation_buttons()
-
-func _populate_level_select_popup() -> void:
-	if not _level_select_popup:
-		return
-	
-	var grid: GridContainer = _level_select_popup.get_node("%LevelGrid")
-	if not grid:
-		return
-	
-	# Clear existing children
-	for child in grid.get_children():
-		child.queue_free()
-	
-	# Create a card for each level
-	for i in range(_level_paths.size()):
-		var level_path := _level_paths[i]
-		var card := _create_level_card(i, level_path)
-		grid.add_child(card)
-
-func _create_level_card(index: int, level_path: String) -> PanelContainer:
-	var card := PanelContainer.new()
-	card.custom_minimum_size = Vector2(240, 180)
-	
-	var vbox := VBoxContainer.new()
-	card.add_child(vbox)
-	
-	var btn := Button.new()
-	btn.flat = true
-	btn.custom_minimum_size = Vector2(240, 180)
-	btn.pressed.connect(_on_level_card_selected.bind(index))
-	card.add_child(btn)
-	
-	var thumb := TextureRect.new()
-	thumb.custom_minimum_size = Vector2(220, 140)
-	thumb.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	thumb.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	vbox.add_child(thumb)
-	
-	var label := Label.new()
-	label.text = _resolve_level_display_name(level_path)
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	vbox.add_child(label)
-	
-	# Load thumbnail
-	var thumbnail := LevelThumbnails.get_thumbnail(level_path)
-	if thumbnail:
-		thumb.texture = thumbnail
-	
-	# Highlight selected level
-	if index == _selected_level_index:
-		var border := ReferenceRect.new()
-		border.border_color = Color(1, 1, 0, 1)
-		border.border_width = 3.0
-		border.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		card.add_child(border)
-		border.set_anchors_preset(Control.PRESET_FULL_RECT)
-	
-	return card
-
-func _on_level_card_selected(index: int) -> void:
-	_selected_level_index = index
-	GameSettings.set_selected_level_index(_selected_level_index)
-	_level_select_popup.hide()
-	_update_preview_displays()
 
 func _resolve_level_display_name(level_path: String) -> String:
 	var packed: PackedScene = load(level_path)
