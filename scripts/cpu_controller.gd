@@ -1,6 +1,6 @@
 extends Node
 
-const GameConstants = preload("res://scripts/game_constants.gd")
+#const GAME_CONSTANTS = preload("res://scripts/game_constants.gd")
 
 const THINK_INTERVAL := 0.067
 const TARGET_LOCK_TIME := 1.0
@@ -16,6 +16,9 @@ const BLOCKED_SPEED_THRESHOLD := 20.0
 const STOMP_HORIZONTAL_RANGE := 80.0
 const STOMP_VERTICAL_RANGE := GameConstants.TILE_SIZE * 3.0
 const STOMP_JUMP_THRESHOLD := GameConstants.TILE_SIZE * 0.75
+const STOMP_FULL_JUMP_CLEARANCE := GameConstants.TILE_SIZE * 3.25
+const STOMP_MIN_STOMP_CLEARANCE := GameConstants.TILE_SIZE * 1.0
+const STOMP_CLEARANCE_BUFFER := GameConstants.TILE_SIZE * 0.5
 const SAFE_LANDING_HORIZONTAL_BUFFER := GameConstants.TILE_SIZE * 0.75
 
 var navigation: LevelNavigation
@@ -67,7 +70,12 @@ func _physics_process(delta: float) -> void:
 	var action := _run_tactics()
 	action = _stabilize_move_direction(action, delta)
 	action = _handle_blocked_state(action, delta)
-	character.set_ai_inputs(action["move_dir"], action["jump_pressed"], false, action["drop_pressed"])
+	character.set_ai_inputs(
+		action["move_dir"],
+		action["jump_pressed"],
+		action.get("jump_released", false),
+		action["drop_pressed"]
+	)
 	last_position = character.global_position
 
 
@@ -326,6 +334,24 @@ func _is_jump_blocked_by_player(target_node: LevelNavigation.NodeEntry) -> bool:
 	return vertical_gap <= STOMP_VERTICAL_RANGE
 
 
+func _evaluate_stomp_jump_profile(relative_target: Vector2) -> Dictionary:
+	if character == null:
+		return {"allowed": false, "use_short_jump": false}
+
+	var max_distance: float = STOMP_FULL_JUMP_CLEARANCE
+	var clearance: float = _get_ceiling_clearance(max_distance)
+	var required: float = STOMP_MIN_STOMP_CLEARANCE + max(0.0, -relative_target.y)
+	if clearance < required:
+		return {"allowed": false, "use_short_jump": false}
+
+	var short_jump_threshold: float = max(STOMP_MIN_STOMP_CLEARANCE, max_distance - STOMP_CLEARANCE_BUFFER)
+	var use_short_jump: bool = clearance < short_jump_threshold
+	return {
+		"allowed": true,
+		"use_short_jump": use_short_jump
+	}
+
+
 func _find_safe_jump_edge(start_node: LevelNavigation.NodeEntry, blocked_node: LevelNavigation.NodeEntry) -> Dictionary:
 	if navigation == null or start_node == null or blocked_node == null:
 		return {}
@@ -396,11 +422,40 @@ func _is_ceiling_player_blocked() -> bool:
 	return false
 
 
-func _action(move_dir: float, jump_pressed: bool, drop_pressed: bool) -> Dictionary:
+func _get_ceiling_clearance(max_distance: float) -> float:
+	if character == null:
+		return max_distance
+
+	var start := character.global_position
+	var end := start - Vector2(0, max_distance)
+	var space := character.get_world_2d().direct_space_state
+	if space == null:
+		return max_distance
+
+	var exclude: Array = [character.get_rid()]
+	if target != null and is_instance_valid(target):
+		exclude.append(target.get_rid())
+
+	var query := PhysicsRayQueryParameters2D.new()
+	query.from = start
+	query.to = end
+	query.exclude = exclude
+	query.collision_mask = character.collision_mask
+
+	var result := space.intersect_ray(query)
+	if result.is_empty():
+		return max_distance
+
+	var hit_position: Vector2 = result.get("position", end)
+	return start.distance_to(hit_position)
+
+
+func _action(move_dir: float, jump_pressed: bool, drop_pressed: bool, jump_released: bool = false) -> Dictionary:
 	return {
 		"move_dir": clamp(move_dir, -1.0, 1.0),
 		"jump_pressed": jump_pressed,
-		"drop_pressed": drop_pressed
+		"drop_pressed": drop_pressed,
+		"jump_released": jump_released
 	}
 
 
@@ -483,7 +538,11 @@ func _attempt_direct_stomp() -> Dictionary:
 		move_dir = 1.0 if rel.x >= 0.0 else -1.0
 
 	var jump := false
+	var short_jump := false
 	if character.is_on_floor() and rel.y < STOMP_JUMP_THRESHOLD and not _is_ceiling_player_blocked():
-		jump = true
+		var jump_profile := _evaluate_stomp_jump_profile(rel)
+		if jump_profile.get("allowed", false):
+			jump = true
+			short_jump = jump_profile.get("use_short_jump", false)
 
-	return _action(move_dir, jump, false)
+	return _action(move_dir, jump, false, short_jump)

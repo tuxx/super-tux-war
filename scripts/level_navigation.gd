@@ -60,7 +60,7 @@ const COLOR_PLATFORM_SEMISOLID := Color(0.2, 1.0, 0.4, 0.35)
 @export var debug_draw_graph := false
 @export var debug_draw_jump_arcs := false 
 @export var max_jump_up_tiles: int = 3
-@export var max_jump_horizontal_tiles: int = 8
+@export var max_jump_horizontal_tiles: int = 4
 
 var nodes: Array[NodeEntry] = []
 var walk_edges: Array = []

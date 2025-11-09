@@ -1,6 +1,6 @@
 extends Control
 
-const LevelNavigation = preload("res://scripts/level_navigation.gd")
+#const LEVEL_NAVIGATION := preload("res://scripts/level_navigation.gd")
 
 var desired_draw_graph := false
 var desired_draw_jump := false
