@@ -61,6 +61,7 @@ func _ensure_default_actions() -> void:
 	_ensure_action("move_left")
 	_ensure_action("move_right")
 	_ensure_action("move_down")
+	_ensure_action("run")
 	_ensure_action("jump")
 	_ensure_action("pause")
 	# UI actions (menu navigation)
@@ -86,6 +87,7 @@ func _ensure_default_actions() -> void:
 	_add_key_if_missing("move_right", KEY_RIGHT)
 	_add_key_if_missing("move_down", KEY_S)
 	_add_key_if_missing("move_down", KEY_DOWN)
+	_add_key_if_missing("run", KEY_SHIFT)
 	_add_key_if_missing("jump", KEY_SPACE)
 	_add_key_if_missing("jump", KEY_W)
 

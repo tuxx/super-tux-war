@@ -8,9 +8,13 @@ extends Node
 
 const THINK_INTERVAL := 0.15  # Reduced from 0.067 for better performance
 const TARGET_LOCK_TIME := 1.0
-const WALK_REACH_EPS := 6.0
-const ALIGNMENT_WINDOW := 8.0
-const LANDING_TOLERANCE := 12.0
+
+# Movement tolerances - increased significantly for momentum-based physics
+const WALK_REACH_EPS := 24.0  # Increased from 6.0 to account for sliding
+const ALIGNMENT_WINDOW := 32.0  # Increased from 8.0 for jump preparation
+const LANDING_TOLERANCE := 40.0  # Increased from 12.0 for landing detection
+const BRAKING_DISTANCE_MULTIPLIER := 1.5  # Extra margin for predictive stopping
+
 const DANGER_VERTICAL := 96.0
 const DANGER_HORIZONTAL := 40.0
 const DIRECTION_COOLDOWN := 0.15
@@ -231,9 +235,15 @@ func _execute_walk_edge(edge: Dictionary) -> Dictionary:
 
 	var dx := node.position.x - character.global_position.x
 	var move_dir := _signed_direction(dx)
+	
+	# Predictive stopping: check if we need to brake
 	if absf(dx) <= WALK_REACH_EPS:
 		current_plan.remove_at(0)
 		move_dir = 0.0
+	elif _should_brake_for_target(node.position.x):
+		# Stop pressing movement to let friction slow us down
+		move_dir = 0.0
+	
 	return _action(move_dir, false, false)
 
 
@@ -247,6 +257,10 @@ func _prepare_jump_edge(edge: Dictionary) -> Dictionary:
 	var dx := start_node.position.x - character.global_position.x
 	var move_dir := _signed_direction(dx)
 
+	# Use predictive braking when approaching alignment point
+	if not (absf(dx) <= ALIGNMENT_WINDOW) and _should_brake_for_target(start_node.position.x):
+		move_dir = 0.0
+	
 	if absf(dx) <= ALIGNMENT_WINDOW:
 		move_dir = _signed_direction(target_node.position.x - character.global_position.x)
 		if character.is_on_floor():
@@ -282,6 +296,10 @@ func _prepare_drop_edge(edge: Dictionary) -> Dictionary:
 	var dx := start_node.position.x - character.global_position.x
 	var move_dir := _signed_direction(dx)
 
+	# Use predictive braking when approaching drop point
+	if not (absf(dx) <= ALIGNMENT_WINDOW) and _should_brake_for_target(start_node.position.x):
+		move_dir = 0.0
+	
 	if absf(dx) <= ALIGNMENT_WINDOW and character.is_on_floor():
 		active_edge = edge.duplicate(true)
 		active_edge_target_id = target_node.id
@@ -541,6 +559,33 @@ func _refresh_character_cache() -> void:
 	for node in nodes:
 		if node is CharacterController:
 			_cached_characters.append(node)
+
+## Determines if AI should start braking to reach target position
+## Uses physics stopping distance with safety margin
+func _should_brake_for_target(target_x: float) -> bool:
+	if character == null or character.physics == null:
+		return false
+	
+	# Get current velocity direction
+	var current_velocity := character.velocity.x
+	if absf(current_velocity) < 10.0:
+		# Already nearly stopped
+		return false
+	
+	# Calculate distance to target
+	var distance_to_target := absf(target_x - character.global_position.x)
+	
+	# Get stopping distance from physics component
+	var stopping_distance := character.physics.get_stopping_distance()
+	
+	# Add safety margin
+	var required_distance := stopping_distance * BRAKING_DISTANCE_MULTIPLIER
+	
+	# Check if we're moving towards the target
+	var moving_towards: bool = sign(current_velocity) == sign(target_x - character.global_position.x)
+	
+	# Brake if we're close enough and moving towards target
+	return moving_towards and distance_to_target <= required_distance
 
 func _attempt_direct_stomp() -> Dictionary:
 	if target == null or character == null:

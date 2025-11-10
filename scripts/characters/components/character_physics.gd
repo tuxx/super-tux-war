@@ -2,14 +2,32 @@ extends Node
 class_name CharacterPhysics
 
 ## Handles character physics: gravity, movement, collision, and boundary wrapping.
+## Implements SMW-style acceleration/friction for realistic momentum-based movement.
 
 var character: CharacterBody2D
 
 # Physics properties
-var move_speed: float = GameConstants.PLAYER_MAX_WALK_SPEED
 var jump_velocity: float = GameConstants.JUMP_VELOCITY
 var gravity: float = GameConstants.GRAVITY
 var max_fall_speed: float = GameConstants.MAX_FALL_SPEED
+
+# Acceleration-based movement (SMW-style)
+var acceleration: float = GameConstants.PLAYER_ACCEL
+var max_speed: float = GameConstants.PLAYER_MAX_WALK_SPEED
+var friction_ground: float = GameConstants.FRICTION_GROUND
+var friction_ice: float = GameConstants.FRICTION_ICE
+var friction_air: float = GameConstants.FRICTION_AIR
+var current_input_direction: float = 0.0
+var current_effective_max_speed: float = GameConstants.PLAYER_MAX_WALK_SPEED
+var previous_horizontal_velocity: float = 0.0
+
+# Speed modifiers (can be set externally for powerups/effects)
+var speed_modifier: float = 1.0  # 1.0 = normal, 1.375 = turbo, 0.55 = slowdown
+var is_turbo_active: bool = false  # Set true when turbo key held
+var is_slowdown_active: bool = false  # Set true when slowdown effect active
+
+# Surface detection
+var is_on_ice: bool = false
 
 # Boundary wrap
 var wrap_enabled: bool = true
@@ -48,11 +66,14 @@ func update_physics(delta: float, is_player: bool) -> float:
 	if drop_through_timer > 0.0:
 		drop_through_timer = max(0.0, drop_through_timer - delta)
 	
+	# Detect surface type (ice vs normal)
+	_detect_surface_type()
+	
 	# Handle input
 	if is_player:
-		_handle_player_input()
+		_handle_player_input(delta)
 	else:
-		_handle_ai_input()
+		_handle_ai_input(delta)
 	
 	# Apply gravity
 	_apply_gravity(delta)
@@ -85,9 +106,12 @@ func update_physics(delta: float, is_player: bool) -> float:
 	
 	return previous_velocity_y
 
-func _handle_player_input() -> void:
+func _handle_player_input(delta: float) -> void:
+	is_turbo_active = Input.is_action_pressed("run")
 	var input_direction := InputManager.get_move_axis_x()
-	character.velocity.x = input_direction * move_speed
+	
+	# Apply acceleration-based movement
+	_apply_horizontal_movement(input_direction, delta)
 	
 	# Drop-through semisolid platforms
 	if InputManager.is_move_down_pressed() and InputManager.is_jump_just_pressed() and character.is_on_floor():
@@ -108,8 +132,9 @@ func _handle_player_input() -> void:
 		if character.velocity.y < GameConstants.JUMP_EARLY_CLAMP:
 			character.velocity.y = GameConstants.JUMP_EARLY_CLAMP
 
-func _handle_ai_input() -> void:
-	character.velocity.x = ai_move_direction * move_speed
+func _handle_ai_input(delta: float) -> void:
+	# Apply acceleration-based movement (same as player)
+	_apply_horizontal_movement(ai_move_direction, delta)
 	
 	if ai_drop_pressed and character.is_on_floor():
 		drop_through_timer = DROP_THROUGH_DURATION
@@ -170,3 +195,114 @@ func _wrap_after_motion() -> void:
 		pos.y = bottom - wrap_offset
 	
 	character.global_position = pos
+
+## Applies SMW-style acceleration and friction to horizontal movement
+func _apply_horizontal_movement(input_direction: float, delta: float) -> void:
+	current_input_direction = input_direction
+	previous_horizontal_velocity = character.velocity.x
+	# Calculate effective max speed based on modifiers
+	var effective_max_speed := max_speed
+	if is_turbo_active:
+		effective_max_speed = GameConstants.PLAYER_MAX_RUN_SPEED
+	elif is_slowdown_active:
+		effective_max_speed = GameConstants.PLAYER_MAX_SLOW_SPEED
+	current_effective_max_speed = effective_max_speed
+	
+	# Determine acceleration rate based on surface
+	var current_accel := acceleration
+	if is_on_ice:
+		current_accel = GameConstants.PLAYER_ACCEL_ICE
+	
+	if input_direction != 0.0:
+		# Apply acceleration
+		var accel_amount := current_accel * delta
+		character.velocity.x += input_direction * accel_amount
+		
+		# Clamp to max speed
+		character.velocity.x = clamp(character.velocity.x, -effective_max_speed, effective_max_speed)
+	else:
+		# Apply friction when no input
+		var friction := _get_current_friction()
+		var friction_amount := friction * delta
+		
+		if absf(character.velocity.x) <= friction_amount:
+			# Stop completely if velocity is very small
+			character.velocity.x = 0.0
+		else:
+			# Apply friction in opposite direction of movement
+			var friction_dir: float = -sign(character.velocity.x)
+			character.velocity.x += friction_dir * friction_amount
+
+## Returns appropriate friction based on current state (ground, ice, air)
+func _get_current_friction() -> float:
+	if not character.is_on_floor():
+		return friction_air
+	elif is_on_ice:
+		return friction_ice
+	else:
+		return friction_ground
+
+## Detects if character is standing on ice tiles
+func _detect_surface_type() -> void:
+	is_on_ice = false
+	
+	if not character.is_on_floor():
+		return
+	
+	# Get the TileMap from the current scene
+	var tilemap := _find_tilemap()
+	if tilemap == null:
+		return
+	
+	# Check tile at foot position
+	var foot_pos: Vector2 = character.get_foot_position()
+	var tile_coords := tilemap.local_to_map(tilemap.to_local(foot_pos))
+	
+	# Get custom data for ice detection (assumes tile has "is_ice" custom data)
+	var tile_data := tilemap.get_cell_tile_data(0, tile_coords)
+	if tile_data != null and tile_data.get_custom_data("is_ice"):
+		is_on_ice = true
+
+## Finds the TileMap node in the current scene
+func _find_tilemap() -> TileMap:
+	var scene_root := character.get_tree().current_scene
+	if scene_root == null:
+		return null
+	
+	# Search for TileMap node (assumes it's directly in scene or in a child)
+	var tilemaps := scene_root.find_children("*", "TileMap")
+	if tilemaps.size() > 0:
+		return tilemaps[0] as TileMap
+	
+	return null
+
+## Calculates distance needed to stop from current velocity (useful for AI)
+func get_stopping_distance() -> float:
+	var friction := _get_current_friction()
+	if friction <= 0.0:
+		return INF
+	
+	var current_speed := absf(character.velocity.x)
+	# Using kinematic equation: v² = u² + 2as
+	# Solving for s (distance): s = v² / (2 * a)
+	return (current_speed * current_speed) / (2.0 * friction)
+
+## Calculates time needed to stop from current velocity (useful for AI)
+func get_stopping_time() -> float:
+	var friction := _get_current_friction()
+	if friction <= 0.0:
+		return INF
+	
+	var current_speed := absf(character.velocity.x)
+	# Using equation: v = u - at
+	# Solving for t: t = v / a
+	return current_speed / friction
+
+func get_current_input_direction() -> float:
+	return current_input_direction
+
+func get_effective_max_speed() -> float:
+	return current_effective_max_speed
+
+func get_previous_horizontal_velocity() -> float:
+	return previous_horizontal_velocity

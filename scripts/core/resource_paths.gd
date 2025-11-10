@@ -15,6 +15,7 @@ const CHARACTER_SPRITESHEET_ALT := "res://assets/characters/%s/spritesheet/"
 const CHARACTER_IDLE_SPRITE := "idle.png"
 const CHARACTER_JUMP_SPRITE := "jump.png"
 const CHARACTER_RUN_SPRITE := "run.png"
+const CHARACTER_SKID_SPRITE := "skid.png"
 const CHARACTER_PORTRAIT := "res://assets/characters/%s/base-16x16.png"
 
 # Level asset paths
@@ -39,4 +40,3 @@ static func get_level_thumbnail_path(level_name: String) -> String:
 
 static func get_level_scene_path(level_name: String) -> String:
 	return LEVEL_FORMAT % level_name
-

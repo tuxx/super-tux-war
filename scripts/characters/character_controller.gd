@@ -66,7 +66,13 @@ func _physics_process(delta: float) -> void:
 	var previous_velocity_y := physics.update_physics(delta, is_player)
 	
 	# Update animations
-	visuals.update_animation(is_on_floor(), velocity)
+	visuals.update_animation(
+		is_on_floor(),
+		velocity,
+		physics.get_current_input_direction(),
+		physics.get_effective_max_speed(),
+		physics.get_previous_horizontal_velocity()
+	)
 	
 	# Check for character collisions (stomps and deaths)
 	_check_character_collisions(previous_velocity_y)

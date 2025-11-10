@@ -6,19 +6,19 @@ class_name GameConstants
 const TILE_SIZE: int = 32
 
 # Player movement (horizontal) — px/s and px/s^2 at 60 fps
-# Note: Accel/friction values correspond to classic SMW-like per-frame deltas.
-const PLAYER_ACCEL: float = 30.0                 # px/s^2 (baseline ground accel feel target)
-const PLAYER_ACCEL_ICE: float = 7.5              # px/s^2
+# Note: Accel/friction are px/frame² → multiply by 60² = 3600 to get px/s²
+const PLAYER_ACCEL: float = 1800.0               # px/s^2 (0.5 px/frame² × 3600)
+const PLAYER_ACCEL_ICE: float = 450.0            # px/s^2 (0.125 px/frame² × 3600)
 
 const PLAYER_MAX_WALK_SPEED: float = 240.0       # px/s
 const PLAYER_MAX_RUN_SPEED: float = 330.0        # px/s
 const PLAYER_MAX_SLOW_SPEED: float = 132.0       # px/s
 const PLAYER_TAGGED_BOOST: float = 60.0          # px/s added when tagged/boosted
 
-# Friction/decay
-const FRICTION_GROUND: float = 12.0              # px/s^2
-const FRICTION_ICE: float = 3.6                  # pxc/s^2
-const FRICTION_AIR: float = 3.6                  # px/s^2
+# Friction/decay (also px/frame² → multiply by 60² = 3600)
+const FRICTION_GROUND: float = 720.0             # px/s^2 (0.2 px/frame² × 3600)
+const FRICTION_ICE: float = 216.0                # px/s^2 (0.06 px/frame² × 3600)
+const FRICTION_AIR: float = 216.0                # px/s^2 (0.06 px/frame² × 3600)
 
 # Player vertical (derived from classic per-frame values at 60 fps)
 # 9.0 px/frame jump and 0.40 px/frame^2 gravity -> ~2–3 tile full jump

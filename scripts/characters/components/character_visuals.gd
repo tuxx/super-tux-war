@@ -16,6 +16,10 @@ const SPAWN_FLASH_SPEED_MULT: float = 4.0
 const SPAWN_BOUNCE_THRESHOLD: float = 0.6
 
 var spawn_animation_timer: float = 0.0
+const SKID_MIN_SPEED_RATIO := 0.95
+const SKID_INPUT_THRESHOLD := 0.4
+var _skid_active := false
+var _skid_target_direction := 0
 
 func _init(character_body: CharacterBody2D) -> void:
 	character = character_body
@@ -43,8 +47,17 @@ func load_animations(character_name: String) -> void:
 		animated_sprite.play("idle")
 
 ## Updates current animation based on character state.
-func update_animation(is_on_floor: bool, velocity: Vector2) -> void:
+func update_animation(
+	is_on_floor: bool,
+	velocity: Vector2,
+	input_direction: float = 0.0,
+	effective_max_speed: float = GameConstants.PLAYER_MAX_WALK_SPEED,
+	previous_velocity_x: float = 0.0
+) -> void:
 	if not animated_sprite:
+		return
+	
+	if _update_skid_state(is_on_floor, velocity.x, input_direction, effective_max_speed, previous_velocity_x):
 		return
 	
 	if not is_on_floor:
@@ -79,6 +92,66 @@ func update_animation(is_on_floor: bool, velocity: Vector2) -> void:
 		# Idle
 		if animated_sprite.animation != "idle":
 			animated_sprite.play("idle")
+
+func _update_skid_state(
+	is_on_floor: bool,
+	velocity_x: float,
+	input_direction: float,
+	effective_max_speed: float,
+	previous_velocity_x: float
+) -> bool:
+	if _skid_active:
+		var velocity_dir: float = sign(velocity_x)
+		var has_input := absf(input_direction) >= SKID_INPUT_THRESHOLD
+		if not is_on_floor or not has_input or velocity_dir == _skid_target_direction or velocity_dir == 0:
+			_skid_active = false
+		else:
+			_play_skid_animation(_skid_target_direction)
+			return true
+	
+	if _should_start_skid(is_on_floor, velocity_x, input_direction, effective_max_speed, previous_velocity_x):
+		_skid_active = true
+		_skid_target_direction = sign(input_direction)
+		_play_skid_animation(_skid_target_direction)
+		return true
+	
+	return false
+
+
+func _should_start_skid(
+	is_on_floor: bool,
+	velocity_x: float,
+	input_direction: float,
+	effective_max_speed: float,
+	previous_velocity_x: float
+) -> bool:
+	if not is_on_floor:
+		return false
+	if effective_max_speed <= 0.0:
+		return false
+	var input_mag := absf(input_direction)
+	if input_mag < SKID_INPUT_THRESHOLD:
+		return false
+	var velocity_dir: float = sign(velocity_x)
+	var input_dir: float = sign(input_direction)
+	if velocity_dir == 0 or input_dir == 0 or velocity_dir == input_dir:
+		return false
+	var speed: float = max(absf(previous_velocity_x), absf(velocity_x))
+	return speed >= effective_max_speed * SKID_MIN_SPEED_RATIO
+
+
+func _play_skid_animation(target_direction: int) -> void:
+	if animated_sprite.sprite_frames and animated_sprite.sprite_frames.has_animation("skid"):
+		if animated_sprite.animation != "skid":
+			animated_sprite.animation = "skid"
+		animated_sprite.frame = 0
+		animated_sprite.stop()
+	else:
+		if animated_sprite.animation != "run":
+			animated_sprite.play("run")
+	
+	if target_direction != 0:
+		animated_sprite.flip_h = target_direction < 0
 
 ## Starts spawn animation effects.
 func start_spawn_animation() -> void:

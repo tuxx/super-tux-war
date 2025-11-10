@@ -27,8 +27,13 @@ Component-based character architecture for players and NPCs.
 - **[Physics Component](character-system/physics-component.md)** - Movement, jumping, gravity
 - **[Lifecycle Component](character-system/lifecycle-component.md)** - Death, respawn, spawn protection
 
-### Core Systems *(coming soon)*
-Deep dive into event bus, game state, input management, and more.
+### Core Systems
+
+- **[Acceleration Physics](ACCELERATION_PHYSICS.md)** - SMW-style momentum-based movement system
+- **[Debug Launch Config](debug-launch-config.md)** - Local-only scene + debug overrides
+- **Event Bus** *(coming soon)* - Event system architecture
+- **Game State** *(coming soon)* - State management
+- **Input Management** *(coming soon)* - Input handling
 
 ## 🎮 Quick Links
 
@@ -68,15 +73,17 @@ super-tux-wars/
 
 ### Core Constants
 
-The game uses **32×32 pixel tiles** and physics constants defined in `GameConstants`:
+The game uses **32×32 pixel tiles** and **SMW-style acceleration physics** defined in `GameConstants`:
 
 - **Tile Size**: 32px
+- **Acceleration**: 30 px/s² (7.5 px/s² on ice)
+- **Friction**: 12 px/s² ground, 3.6 px/s² ice/air
 - **Gravity**: 1440 px/s²
 - **Jump Velocity**: -540 px/s
 - **Max Walk Speed**: 240 px/s
-- **Max Run Speed**: 330 px/s
+- **Max Run Speed**: 330 px/s (turbo)
 
-See [game_constants.gd](../scripts/core/game_constants.gd) for complete values.
+See [game_constants.gd](../scripts/core/game_constants.gd) for complete values and [Acceleration Physics](ACCELERATION_PHYSICS.md) for detailed behavior.
 
 ## 🤝 Contributing to Documentation
 

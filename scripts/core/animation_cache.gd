@@ -30,14 +30,16 @@ func _create_sprite_frames(character_name: String) -> SpriteFrames:
 	var idle_path := base_path + ResourcePaths.CHARACTER_IDLE_SPRITE
 	var jump_path := base_path + ResourcePaths.CHARACTER_JUMP_SPRITE
 	var run_path := base_path + ResourcePaths.CHARACTER_RUN_SPRITE
+	var skid_path := base_path + ResourcePaths.CHARACTER_SKID_SPRITE
 	
 	# Try to load textures
 	var idle_texture := _load_texture_safe(idle_path)
 	var jump_texture := _load_texture_safe(jump_path)
 	var run_texture := _load_texture_safe(run_path)
+	var skid_texture := _load_texture_safe(skid_path)
 	
 	# If no textures could be loaded, return null
-	if not idle_texture and not jump_texture and not run_texture:
+	if not idle_texture and not jump_texture and not run_texture and not skid_texture:
 		push_warning("Could not load animations for character: %s" % character_name)
 		return null
 	
@@ -83,6 +85,15 @@ func _create_sprite_frames(character_name: String) -> SpriteFrames:
 			run_frame.region = Rect2(i * 32, 0, 32, 32)
 			new_frames.add_frame("run", run_frame, 1.0, i)
 	
+	if skid_texture:
+		new_frames.add_animation("skid")
+		new_frames.set_animation_speed("skid", 1.0)
+		new_frames.set_animation_loop("skid", false)
+		var skid_frame := AtlasTexture.new()
+		skid_frame.atlas = skid_texture
+		skid_frame.region = Rect2(0, 0, 32, 32)
+		new_frames.add_frame("skid", skid_frame, 1.0, 0)
+	
 	return new_frames
 
 func _load_texture_safe(path: String) -> Texture2D:
@@ -95,4 +106,3 @@ func _load_texture_safe(path: String) -> Texture2D:
 
 func clear_cache() -> void:
 	_cache.clear()
-

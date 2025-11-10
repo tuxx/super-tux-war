@@ -1,9 +1,10 @@
-[gd_scene load_steps=15 format=3 uid="uid://c4dwbqdkxmm42"]
+[gd_scene load_steps=17 format=3 uid="uid://c4dwbqdkxmm42"]
 
 [ext_resource type="Script" uid="uid://de6d7kdce320s" path="res://scripts/characters/character_controller.gd" id="1_character_script"]
 [ext_resource type="Texture2D" uid="uid://cbukagri8csew" path="res://assets/characters/tux/spritesheets/idle.png" id="2_mjudt"]
 [ext_resource type="Texture2D" uid="uid://c72ru5jp5onbe" path="res://assets/characters/tux/spritesheets/jump.png" id="3_ar13e"]
 [ext_resource type="Texture2D" uid="uid://bi3oicvxr2f5x" path="res://assets/characters/tux/spritesheets/run.png" id="3_mjudt"]
+[ext_resource type="Texture2D" uid="uid://btcx5dkd4kb7d" path="res://assets/characters/tux/spritesheets/skid.png" id="5_hfyxy"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
 size = Vector2(80, 112)
@@ -39,6 +40,10 @@ region = Rect2(64, 0, 32, 32)
 [sub_resource type="AtlasTexture" id="AtlasTexture_6prti"]
 atlas = ExtResource("3_mjudt")
 region = Rect2(96, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_72f5n"]
+atlas = ExtResource("5_hfyxy")
+region = Rect2(0, 0, 32, 32)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_1"]
 animations = [{
@@ -80,6 +85,14 @@ animations = [{
 "loop": true,
 "name": &"run",
 "speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_72f5n")
+}],
+"loop": true,
+"name": &"skid",
+"speed": 5.0
 }]
 
 [node name="PlayerCharacter" type="CharacterBody2D"]
@@ -88,7 +101,6 @@ collision_layer = 2
 collision_mask = 3
 script = ExtResource("1_character_script")
 is_player = true
-character_color = Color(1, 1, 1, 1)
 character_asset_name = "tux"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
@@ -98,6 +110,5 @@ shape = SubResource("RectangleShape2D_1")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_1")
-animation = &"jump"
+animation = &"skid"
 autoplay = "idle"
-frame_progress = 0.4443674
