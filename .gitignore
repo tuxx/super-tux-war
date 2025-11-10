@@ -20,3 +20,6 @@ localcrap/
 
 # Build outputs
 build/
+
+# Dev launch config
+dev_launch.cfg

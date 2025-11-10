@@ -23,6 +23,7 @@ AnimationCache="*res://scripts/core/animation_cache.gd"
 UIManager="*res://scripts/ui/ui_manager.gd"
 InputManager="*res://scripts/core/input_manager.gd"
 GameSettings="*res://scripts/core/game_settings.gd"
+DebugBootstrap="*res://scripts/core/debug_bootstrap.gd"
 
 [display]
 

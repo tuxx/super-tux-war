@@ -16,8 +16,17 @@ var highest_frame_time_ever: float = 0.0
 var player_stats_container: PanelContainer = null
 var player_stats_visible := false
 var player_stats_labels: Dictionary = {}
+var _player_was_moving := false
+var _player_move_start_position := Vector2.ZERO
+var _player_top_speed_logged := false
+var _player_last_input_active := false
+var _player_stop_input_position := Vector2.ZERO
 
 const FONT_SIZE := 11  # Smaller font for dev menu
+const PLAYER_INPUT_THRESHOLD := 0.1
+const PLAYER_SPEED_THRESHOLD := 5.0
+const PLAYER_TOP_SPEED_RATIO := 0.98
+const PLAYER_STATS_LOG_SETTING := "debug/player_stats_log_events"
 
 # Drag state
 var dragging := false
@@ -139,7 +148,6 @@ func _input(event: InputEvent) -> void:
 					get_viewport().set_input_as_handled()
 	
 	elif event is InputEventMouseMotion and dragging:
-		var mm := event as InputEventMouseMotion
 		var mouse_pos := get_viewport().get_mouse_position()
 		dev_menu_container.position = mouse_pos - drag_offset
 		
@@ -323,7 +331,7 @@ func _toggle_player_stats() -> void:
 
 func _clear_npcs() -> void:
 	if npcs_removed:
-		print("[Dev] NPCs already cleared.")
+		#print("[Dev] NPCs already cleared.")
 		return
 	
 	var removed := 0
@@ -346,7 +354,7 @@ func _save_menu_position() -> void:
 		err = config.save(DEV_MENU_CONFIG_PATH)
 		if err != OK:
 			push_warning("Failed to save dev menu config: %s" % err)
-		print("[Dev] Menu position saved: ", dev_menu_container.position)
+		#print("[Dev] Menu position saved: ", dev_menu_container.position)
 
 func _load_menu_position() -> Vector2:
 	var config := ConfigFile.new()
@@ -417,6 +425,132 @@ func _update_player_stats() -> void:
 	
 	player_stats_labels["on_floor"].text = "On Floor: %s" % ("Yes" if player.is_on_floor() else "No")
 	player_stats_labels["on_ice"].text = "On Ice: %s" % ("Yes" if player.physics.is_on_ice else "No")
+	
+	_track_player_stat_events(
+		player,
+		player.velocity,
+		player.global_position,
+		absf(player.velocity.x),
+		current_accel,
+		active_friction,
+		current_max_speed
+	)
+
+
+func _track_player_stat_events(
+	player: CharacterController,
+	velocity: Vector2,
+	position: Vector2,
+	speed: float,
+	accel: float,
+	friction: float,
+	current_max_speed: float
+) -> void:
+	if not bool(ProjectSettings.get_setting(PLAYER_STATS_LOG_SETTING, false)):
+		return
+	var input_dir := InputManager.get_move_axis_x()
+	var has_input := absf(input_dir) > PLAYER_INPUT_THRESHOLD
+	var is_moving := speed > PLAYER_SPEED_THRESHOLD
+	
+	if is_moving and not _player_was_moving:
+		_player_was_moving = true
+		_player_move_start_position = position
+		_player_top_speed_logged = false
+		_player_stop_input_position = position
+		_log_player_event(
+			"Player starts moving",
+			_build_player_stat_lines(position, velocity, speed, accel, friction)
+		)
+	elif not is_moving and _player_was_moving:
+		var tiles_since_stop := _tiles_traveled(_player_stop_input_position, position)
+		_log_player_event(
+			"Player no longer moving",
+			_build_player_stat_lines_with_tiles(
+				tiles_since_stop,
+				position,
+				velocity,
+				speed,
+				accel,
+				friction
+			)
+		)
+		_player_was_moving = false
+		_player_top_speed_logged = false
+		_player_last_input_active = has_input
+		return
+	
+	if _player_was_moving and not _player_top_speed_logged and current_max_speed > 0.0:
+		if speed >= current_max_speed * PLAYER_TOP_SPEED_RATIO:
+			var tiles_moved := _tiles_traveled(_player_move_start_position, position)
+			_log_player_event(
+				"Player reached top speed",
+				_build_player_stat_lines_with_tiles(
+					tiles_moved,
+					position,
+					velocity,
+					speed,
+					accel,
+					friction
+				)
+			)
+			_player_top_speed_logged = true
+	
+	if _player_was_moving and _player_last_input_active and not has_input and speed > PLAYER_SPEED_THRESHOLD:
+		_player_stop_input_position = position
+		_log_player_event(
+			"Player stopped input",
+			_build_player_stat_lines(position, velocity, speed, accel, friction)
+		)
+	
+	if has_input:
+		_player_stop_input_position = position
+	
+	_player_last_input_active = has_input
+
+
+func _build_player_stat_lines(
+	position: Vector2,
+	velocity: Vector2,
+	speed: float,
+	accel: float,
+	friction: float
+) -> Array[String]:
+	var lines: Array[String] = [
+		"position=(%.1f, %.1f)" % [position.x, position.y],
+		"velocity=(%.1f, %.1f)" % [velocity.x, velocity.y],
+		"speed=%.1f px/s" % speed,
+		"accel=%.1f px/s²" % accel,
+		"friction=%.1f px/s²" % friction
+	]
+	return lines
+
+
+func _build_player_stat_lines_with_tiles(
+	tiles: float,
+	position: Vector2,
+	velocity: Vector2,
+	speed: float,
+	accel: float,
+	friction: float
+) -> Array[String]:
+	var lines: Array[String] = [
+		"tiles_moved=%.2f tiles" % tiles
+	]
+	lines.append_array(_build_player_stat_lines(position, velocity, speed, accel, friction))
+	return lines
+
+
+func _tiles_traveled(from_pos: Vector2, to_pos: Vector2) -> float:
+	var distance := absf(to_pos.x - from_pos.x)
+	return distance / float(GameConstants.TILE_SIZE)
+
+
+func _log_player_event(event_name: String, lines: Array[String]) -> void:
+	print("[Dev][Stats] %s:" % event_name)
+	print("[Dev][Stats] [")
+	for line in lines:
+		print("[Dev][Stats]   %s" % line)
+	print("[Dev][Stats] ]")
 
 
 func _draw_performance_graph() -> void:
