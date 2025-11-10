@@ -5,6 +5,9 @@ signal dev_menu_toggled
 signal nav_graph_toggled
 signal jump_arcs_toggled
 signal debug_pause_toggled
+signal perf_graph_toggled
+signal player_stats_toggled
+signal npc_clear_toggled
 
 const DEADZONE := 0.5
 
@@ -27,6 +30,12 @@ func _process(_delta: float) -> void:
 		jump_arcs_toggled.emit()
 	if Input.is_action_just_pressed("debug_pause"):
 		debug_pause_toggled.emit()
+	if Input.is_action_just_pressed("toggle_perf_graph"):
+		perf_graph_toggled.emit()
+	if Input.is_action_just_pressed("toggle_player_stats"):
+		player_stats_toggled.emit()
+	if Input.is_action_just_pressed("toggle_npc_clear"):
+		npc_clear_toggled.emit()
 
 
 # --- Public helpers for gameplay code (characters, etc.) ---
@@ -66,6 +75,9 @@ func _ensure_default_actions() -> void:
 	_ensure_action("toggle_nav_graph")
 	_ensure_action("toggle_jump_arcs")
 	_ensure_action("debug_pause")
+	_ensure_action("toggle_perf_graph")
+	_ensure_action("toggle_player_stats")
+	_ensure_action("toggle_npc_clear")
 
 	# Keyboard mappings (WASD + Arrows)
 	_add_key_if_missing("move_left", KEY_A)
@@ -91,10 +103,13 @@ func _ensure_default_actions() -> void:
 	_add_key_if_missing("pause", KEY_ESCAPE)
 
 	# Dev keys (F keys and P for pause)
-	_add_key_if_missing("toggle_dev_menu", KEY_F10)
-	_add_key_if_missing("toggle_nav_graph", KEY_F11)
-	_add_key_if_missing("toggle_jump_arcs", KEY_F12)
+	_add_key_if_missing("toggle_player_stats", KEY_F1)
+	_add_key_if_missing("toggle_perf_graph", KEY_F2)
+	_add_key_if_missing("toggle_dev_menu", KEY_F12)
+	_add_key_if_missing("toggle_nav_graph", KEY_PAGEUP)
+	_add_key_if_missing("toggle_jump_arcs", KEY_PAGEDOWN)
 	_add_key_if_missing("debug_pause", KEY_P)
+	_add_key_if_missing("toggle_npc_clear", KEY_N)
 
 	# Controller - buttons
 	_add_joy_button_if_missing("jump", JOY_BUTTON_A) # South (A on Xbox)
