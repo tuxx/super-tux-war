@@ -167,8 +167,13 @@ func _apply_gravity(delta: float) -> void:
 	if not character.is_on_floor():
 		character.velocity.y += gravity * delta
 
-func _perform_jump() -> void:
-	character.velocity.y = jump_velocity
+func _perform_jump(jump_modifier: float = 1.0) -> void:
+	var jump_speed := jump_velocity
+	var has_directional_input := absf(current_input_direction) > 0.1
+	var is_at_turbo_speed := absf(character.velocity.x) >= GameConstants.PLAYER_MAX_WALK_SPEED
+	if is_turbo_active and has_directional_input and is_at_turbo_speed:
+		jump_speed = GameConstants.JUMP_VELOCITY_TURBO
+	character.velocity.y = jump_speed * jump_modifier
 
 func _wrap_after_motion() -> void:
 	if not wrap_enabled:
