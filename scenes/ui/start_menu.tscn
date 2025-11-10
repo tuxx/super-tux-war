@@ -122,8 +122,8 @@ theme_override_constants/separation = 5
 
 [node name="KillsControls" type="HBoxContainer" parent="PanelContainer/VBox/ContentHBox/Buttons/KillsToWinSection"]
 layout_mode = 2
-alignment = 1
 theme_override_constants/separation = 15
+alignment = 1
 
 [node name="DecreaseKillsButton" type="Button" parent="PanelContainer/VBox/ContentHBox/Buttons/KillsToWinSection/KillsControls"]
 unique_name_in_owner = true

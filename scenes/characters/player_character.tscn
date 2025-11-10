@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://de6d7kdce320s" path="res://scripts/characters/character_controller.gd" id="1_character_script"]
 [ext_resource type="Texture2D" uid="uid://cbukagri8csew" path="res://assets/characters/tux/spritesheets/idle.png" id="2_mjudt"]
-[ext_resource type="Texture2D" uid="uid://c72ru5jp5onbe" path="res://assets/characters/tux/spritesheets/jump.png" id="3_ar13e"]
+[ext_resource type="Texture2D" uid="uid://c72ru5jp5onbe" path="res://assets/characters/tux/spritesheets/jump.png" id="3_hfyxy"]
 [ext_resource type="Texture2D" uid="uid://bi3oicvxr2f5x" path="res://assets/characters/tux/spritesheets/run.png" id="3_mjudt"]
 [ext_resource type="Texture2D" uid="uid://btcx5dkd4kb7d" path="res://assets/characters/tux/spritesheets/skid.png" id="5_hfyxy"]
 
@@ -18,11 +18,11 @@ atlas = ExtResource("2_mjudt")
 region = Rect2(32, 0, 32, 32)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_j376r"]
-atlas = ExtResource("3_ar13e")
+atlas = ExtResource("3_hfyxy")
 region = Rect2(0, 0, 32, 32)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_h7c8y"]
-atlas = ExtResource("3_ar13e")
+atlas = ExtResource("3_hfyxy")
 region = Rect2(32, 0, 32, 32)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_hfyxy"]
@@ -109,6 +109,7 @@ scale = Vector2(0.25, 0.25)
 shape = SubResource("RectangleShape2D_1")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+texture_filter = 1
 sprite_frames = SubResource("SpriteFrames_1")
 animation = &"skid"
 autoplay = "idle"
