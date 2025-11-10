@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Super Tux War</title>
+  <style>
+    :root { --game-w: 1280px; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background:#0b0d10; color:#e6e6e6; }
+
+    .header { display:flex; gap:16px; align-items:center; justify-content:space-between; padding:14px 22px; background:#11151a; border-bottom:1px solid #222; position:sticky; top:0; z-index:10; }
+    .brand h1 { margin:0; font-size:1.05rem; font-weight:650; letter-spacing:.2px; }
+    .links a { text-decoration:none; padding:8px 12px; border:1px solid #333; border-radius:10px; color:#e6e6e6; }
+    .links a + a { margin-left:10px; }
+
+    .main { max-width: 1680px; margin: 0 auto; padding: 22px; }
+
+    /* NEW: grid layout that gracefully collapses */
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr minmax(280px, 420px);
+      gap: 24px;
+      align-items: start;
+    }
+    @media (max-width: 1400px) {
+      .layout { grid-template-columns: 1fr; } /* sidebar drops below */
+    }
+
+    /* Game container: scales responsively but never exceeds 1280 wide; keeps 16:9 */
+    .game-shell {
+      width: min(100%, var(--game-w));
+      aspect-ratio: 16 / 9;
+      background: #000;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.45);
+      justify-self: center; /* center on narrow screens */
+      overflow: hidden;
+    }
+    .game-shell iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+    }
+
+    .card { background:#11151a; border:1px solid #222; border-radius:12px; padding:16px; }
+    .card + .card { margin-top:16px; }
+
+    h2, h3 { margin: 8px 0 10px; font-weight:650; }
+    kbd { background:#1b1f26; border:1px solid #333; padding:2px 6px; border-radius:6px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:.9em; }
+    .legend ul { list-style:none; padding-left:0; margin:0; }
+    .legend li { display:flex; gap:12px; align-items:center; padding:6px 0; border-bottom:1px dashed #222; }
+    .legend li:last-child { border-bottom:0; }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="brand">
+      <h1>Super Tux War</h1>
+    </div>
+    <nav class="links">
+      <a href="https://github.com/tuxx/super-tux-war" target="_blank" rel="noopener">GitHub</a>
+      <a href="game/index.html" target="_blank" rel="noopener">Open Fullscreen</a>
+    </nav>
+  </header>
+
+  <main class="main">
+    <div class="layout">
+      <!-- Left column (becomes top on narrow screens) -->
+      <div class="game-shell">
+        <!-- The iframe scales with the shell; Godot page handles its own canvas -->
+        <iframe src="game/index.html" allow="autoplay; fullscreen; gamepad" title="Super Tux War"></iframe>
+      </div>
+
+      <!-- Right column (drops below on narrow screens) -->
+      <aside>
+        <div class="card legend">
+          <h2>Controls</h2>
+          <ul>
+            <li><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span> Move</li>
+            <li><span><kbd>Down+Jump</kbd></span> Fall through platform</li>
+            <li><span><kbd>Space</kbd></span> Jump</li>
+            <li><span><kbd>Shift</kbd></span> Sprint</li>
+            <li><span><kbd>Esc</kbd></span> Pause / Menu</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>About</h3>
+          <p>This is the web build of <strong>Super Tux War</strong> (Godot 4.5). The wrapper keeps a crisp 16:9 game area and leaves room for notes and links.</p>
+          <p>Source: <a href="https://github.com/tuxx/super-tux-war" target="_blank" rel="noopener">github.com/tuxx/super-tux-war</a></p>
+        </div>
+      </aside>
+    </div>
+  </main>
+</body>
+</html>
+

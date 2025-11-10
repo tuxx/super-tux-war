@@ -41,15 +41,19 @@ jobs:
 
       - name: Build Web
         run: |
-          mkdir -p build/web
-          ./Godot_v${GODOT_VERSION}-stable_linux.x86_64 --headless --verbose --export-release "Web" build/web/index.html
+          mkdir -p build/web/game
+          ./Godot_v${GODOT_VERSION}-stable_linux.x86_64 --headless --verbose --export-release "Web" build/web/game/index.html
 
       - name: Add coi-serviceworker (for SharedArrayBuffer)
         run: |
-          cd build/web
+          cd build/web/game
           wget -q https://raw.githubusercontent.com/gzuidhof/coi-serviceworker/master/coi-serviceworker.min.js
           # Add the service worker script to enable SharedArrayBuffer
           sed -i 's/<head>/<head>\n    <script src="coi-serviceworker.min.js"><\/script>/' index.html
+
+      - name: Add wrapper
+        run: |
+          cp .github/workflows/godot-wrapper.html build/web/index.html
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
