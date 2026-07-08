@@ -66,9 +66,6 @@ func update_physics(delta: float, is_player: bool) -> float:
 	if drop_through_timer > 0.0:
 		drop_through_timer = max(0.0, drop_through_timer - delta)
 	
-	# Detect surface type (ice vs normal)
-	_detect_surface_type()
-	
 	# Handle input
 	if is_player:
 		_handle_player_input(delta)
@@ -91,11 +88,14 @@ func update_physics(delta: float, is_player: bool) -> float:
 		character.platform_on_leave = CharacterBody2D.PLATFORM_ON_LEAVE_DO_NOTHING
 	
 	character.move_and_slide()
-	
+
 	# Restore platform behavior
 	if drop_through_timer > 0.0:
 		character.platform_on_leave = old_platform_on_leave
-	
+
+	# Detect surface type (ice vs normal) from this frame's actual collision
+	_detect_surface_type()
+
 	# Handle buffered jump after landing
 	if character.is_on_floor() and not was_on_floor and jump_buffer_timer > 0.0:
 		_perform_jump()
@@ -250,36 +250,47 @@ func _get_current_friction() -> float:
 ## Detects if character is standing on ice tiles
 func _detect_surface_type() -> void:
 	is_on_ice = false
-	
+
 	if not character.is_on_floor():
 		return
-	
-	# Get the TileMap from the current scene
-	var tilemap := _find_tilemap()
-	if tilemap == null:
-		return
-	
-	# Check tile at foot position
-	var foot_pos: Vector2 = character.get_foot_position()
-	var tile_coords := tilemap.local_to_map(tilemap.to_local(foot_pos))
-	
-	# Get custom data for ice detection (assumes tile has "is_ice" custom data)
-	var tile_data := tilemap.get_cell_tile_data(0, tile_coords)
-	if tile_data != null and tile_data.get_custom_data("is_ice"):
-		is_on_ice = true
 
-## Finds the TileMap node in the current scene
-func _find_tilemap() -> TileMap:
+	var probe_pos := _get_ground_probe_position()
+
+	# Check every ground layer at the probe position for the "ice" custom data flag
+	for tilemap in _find_ground_tilemaps():
+		var tile_coords := tilemap.local_to_map(tilemap.to_local(probe_pos))
+		var tile_data := tilemap.get_cell_tile_data(tile_coords)
+		if tile_data != null and tile_data.get_custom_data("ice"):
+			is_on_ice = true
+			return
+
+## Returns a point a few pixels below the character's collision bottom edge,
+## safely inside the tile it's resting on. Sampling exactly at the collision
+## boundary is unreliable: floor-snap leaves a sub-pixel gap that can round
+## the sample into the (empty) tile above instead of the one underfoot.
+const GROUND_PROBE_DEPTH: float = 4.0
+
+func _get_ground_probe_position() -> Vector2:
+	var shape_node := character.get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if shape_node and shape_node.shape is RectangleShape2D:
+		var rect := shape_node.shape as RectangleShape2D
+		var half_height: float = rect.size.y * shape_node.scale.y / 2.0
+		var bottom_offset: float = shape_node.position.y + half_height
+		return character.global_position + Vector2(0, bottom_offset + GROUND_PROBE_DEPTH)
+	return character.get_foot_position()
+
+## Finds the TileMapLayer nodes that carry walkable ground collision
+func _find_ground_tilemaps() -> Array[TileMapLayer]:
 	var scene_root := character.get_tree().current_scene
 	if scene_root == null:
-		return null
-	
-	# Search for TileMap node (assumes it's directly in scene or in a child)
-	var tilemaps := scene_root.find_children("*", "TileMap")
-	if tilemaps.size() > 0:
-		return tilemaps[0] as TileMap
-	
-	return null
+		return []
+
+	var layers: Array[TileMapLayer] = []
+	for layer_name in ["GroundTileMap", "SemisolidTileMap"]:
+		var node := scene_root.find_child(layer_name, true, false)
+		if node is TileMapLayer:
+			layers.append(node)
+	return layers
 
 ## Calculates distance needed to stop from current velocity (useful for AI)
 func get_stopping_distance() -> float:
